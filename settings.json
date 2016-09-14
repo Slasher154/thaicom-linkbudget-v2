@@ -1,0 +1,22 @@
+{
+  "public": {
+    "dummyPassword": "abcd1234"
+  },
+  "private": {
+    "thaicomOauth": {
+      "IP_Address": "Your Server IP Address",
+      "System": "Your System Name",
+      "APIKey": "Your API Key here"
+    },
+    "dummyAdmin": {
+      "bu": "BU-SEN",
+      "dp": "DP-CS",
+      "email": "thanatv@thaicom.net",
+      "gender": "M",
+      "firstName": "Thanat",
+      "lastName": "Varathon",
+      "position": "EN",
+      "image": ""
+    }
+  }
+}
