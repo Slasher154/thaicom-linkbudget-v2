@@ -51,3 +51,18 @@ loggedIn.route('/logout', {
         })
     }
 });
+
+// ---------------------------------------------------- Contour Routes ----------------------------------------------
+loggedIn.route('/contours', {
+    name: 'contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'contours' });
+    },
+});
+
+loggedIn.route('/contours/upload', {
+    name: 'upload-contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'uploadContours' });
+    },
+});

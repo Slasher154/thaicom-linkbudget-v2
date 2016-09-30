@@ -1,0 +1,19 @@
+<template name="uploadContours">
+    <div class="page-header">
+        <h1>Upload Satellite Contours</h1>
+    </div>
+    <div class="row">
+        <h3>1. Upload all .dat files to be merged</h3>
+        <form id="filePathForm"  {{b "submit: submitFilePath"}}>
+
+            <div class="form-group">
+                <input {{b "change: handleFileChanged"}} type="file" id="datFiles" name="datFiles[]" multiple />
+            </div>
+            <a download="beams.dat" id="downloadlink" {{b "visible: showDownloadLink, attr: { href: downloadLink }"}}>Download</a>
+        </form>
+    </div>
+    <hr>
+    <div class="row">
+        <h3>2. Import the output .dat file into Satsoft</h3>
+    </div>
+</template>
