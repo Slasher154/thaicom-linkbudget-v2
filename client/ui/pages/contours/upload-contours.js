@@ -2,6 +2,7 @@
  * Created by thana on 9/30/2016.
  */
 import glob from 'glob';
+import { gxtConverter } from '/imports/api/gxt-converter/gxt-converter.js';
 
 Template.uploadContours.viewmodel({
     onRendered() {
@@ -13,7 +14,7 @@ Template.uploadContours.viewmodel({
     filePath: '',
     showDownloadLink: false,
     downloadLink: '',
-    handleFileChanged(event) {
+    handleDatFileUpload(event) {
         _checkFileApiSupport();
         let filelist = event.target.files;
 
@@ -67,6 +68,19 @@ Template.uploadContours.viewmodel({
             });
         };
     },
+    handleGxtFileUpload(event) {
+        let gxtFile = event.target.files[0];
+        // Function gxtConverter returns a promise that resolves from the result of successful file read
+        // which will return the array of transponders, each transponder holds a Geojson FeatureCollection
+        // of relative contour polygons
+        gxtConverter(gxtFile).then((results) => {
+            // Update the result text to show on the page
+            this.gxtResult(JSON.stringify(results));
+        }).catch((error) => {
+            Bert.alert(error, 'danger', 'fixed-top');
+        });
+    },
+    gxtResult: 'See your GXT file upload result here',
 });
 
 let _checkFileApiSupport = () => {
@@ -77,4 +91,6 @@ let _checkFileApiSupport = () => {
         Bert.alert('The File APIs are not fully supported by your browser.', 'danger', 'fixed-top');
     }
 };
+
+
 

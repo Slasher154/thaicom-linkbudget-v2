@@ -4,16 +4,24 @@
     </div>
     <div class="row">
         <h3>1. Upload all .dat files to be merged</h3>
-        <form id="filePathForm"  {{b "submit: submitFilePath"}}>
 
-            <div class="form-group">
-                <input {{b "change: handleFileChanged"}} type="file" id="datFiles" name="datFiles[]" multiple />
-            </div>
-            <a download="beams.dat" id="downloadlink" {{b "visible: showDownloadLink, attr: { href: downloadLink }"}}>Download</a>
-        </form>
+        <div>
+            <input {{b "change: handleDatFileUpload"}} type="file" id="datFiles" name="datFiles[]" multiple />
+        </div>
+        <a download="beams.dat" id="downloadlink" {{b "visible: showDownloadLink, attr: { href: downloadLink }"}}>Download</a>
+
     </div>
     <hr>
     <div class="row">
         <h3>2. Import the output .dat file into Satsoft</h3>
+    </div>
+    <hr>
+    <div class="row">
+        <h3>3. Upload GXT File</h3>
+
+
+        <input {{b "change: handleGxtFileUpload"}} type="file" id="gxtFile" name="gxtFile" />
+        <div id="result" {{b "text:gxtResult"}}></div>
+
     </div>
 </template>
