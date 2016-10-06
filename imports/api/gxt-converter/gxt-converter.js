@@ -144,6 +144,7 @@ export const gxtConverter = (gxtFile) => {
                         type: "Feature",
                         properties: {
                             relativeGain: relativeGain,
+                            beam: '',
                         },
                         geometry: {
                             type: "Polygon",

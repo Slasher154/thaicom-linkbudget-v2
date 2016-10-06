@@ -75,7 +75,11 @@ Template.uploadContours.viewmodel({
         // of relative contour polygons
         gxtConverter(gxtFile).then((results) => {
             // Update the result text to show on the page
-            this.gxtResult(JSON.stringify(results));
+            Blaze.renderWithData(Template.geojsonPreview, {
+                height: '550px',
+                centerAddress: 'Thailand',
+                geojsonData: results[0],
+            }, $('#geojsonPreview')[0]);
         }).catch((error) => {
             Bert.alert(error, 'danger', 'fixed-top');
         });
