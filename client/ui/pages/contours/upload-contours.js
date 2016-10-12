@@ -74,6 +74,7 @@ Template.uploadContours.viewmodel({
         // which will return the array of transponders, each transponder holds a Geojson FeatureCollection
         // of relative contour polygons
         gxtConverter(gxtFile).then((results) => {
+            console.log(JSON.stringify(results));
             // Update the result text to show on the page
             Blaze.renderWithData(Template.geojsonPreview, {
                 height: '550px',

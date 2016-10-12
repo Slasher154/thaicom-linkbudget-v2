@@ -66,3 +66,38 @@ loggedIn.route('/contours/upload', {
         BlazeLayout.render('mainLayout', { content: 'uploadContours' });
     },
 });
+
+loggedIn.route('/education', {
+    name: 'education',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'education' });
+    },
+});
+
+loggedIn.route('/video', {
+    name: 'video',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'video' });
+    },
+});
+
+loggedIn.route('/quiz-upload', {
+    name: 'quiz-upload',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'quiz-upload' });
+    },
+});
+
+loggedIn.route('/quiz-rating', {
+    name: 'quiz-rating',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'quiz-rating' });
+    },
+});
+
+loggedIn.route('/channel-rating', {
+    name: 'channel-rating',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'channel-rating' });
+    },
+});
