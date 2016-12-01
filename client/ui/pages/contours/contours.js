@@ -459,9 +459,9 @@ Template.contours.viewmodel({
         }
     },
     satellites: [
-        { id: 'A', name: 'Thaicom 4' },
-        { id: 'B', name: 'Thaicom 5' },
-        { id: 'C', name: 'Thaicom 6' },
+        { id: 'Thaicom 4', name: 'Thaicom 4' },
+        { id: 'Thaicom 5', name: 'Thaicom 5' },
+        { id: 'Thaicom 6', name: 'Thaicom 6' },
     ],
     selectedSatellite: '',
     selectedValueToDisplay: '',
@@ -690,9 +690,13 @@ Template.contours.viewmodel({
                 if (columns.length == 3) { // HTS
                     let path = columns[1].toLowerCase();
                     console.log('Path = ' + path);
-                    if(!_.contains(['forward','return','fwd','rtn'], path)) {
-                        return false;
+                    if(_.contains(['forward','fwd'], path)) {
+                        path = 'forward';
                     }
+                    else if (_.contains(['return', 'rtn'], path)) {
+                        path = 'return';
+                    }
+                    else return false;
                     contourLine.path = path;
 
                     let value = columns[2];
