@@ -1,0 +1,96 @@
+<template name="findContours">
+    <style type="text/css">
+        .map-container {
+            height: 550px;
+        }
+    </style>
+    <div class="page-header">
+        <h1>Find Thaicom Satellite Contours from Location</h1>
+    </div>
+    <div class="row">
+
+        <!-- Selectors -->
+        <div class="col-sm-3 col-xs-12 form-group">
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#input-selector" aria-controls="input-selector" role="tab" data-toggle="tab">Input</a>
+                </li>
+                <li role="presentation"><a href="#contour-modifier" aria-controls="contour-modifier" role="tab"
+                                           data-toggle="tab">Contours</a></li>
+
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <br>
+                <div role="tabpanel" class="tab-pane active" id="input-selector">
+                    <form id="selector">
+                        <div class="form-group">
+                            <label for="satellite-picker">Satellite</label>
+                            <select class="form-control" {{b "options: satellites, optionsValue: id, optionsText: name, value: selectedSatellite, defaultText: 'Select a satellite', defaultValue: ''"}}>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">Value to Display</label>
+                            <div class="radio"><label>
+                                <input type="radio" name="valueToDisplay" {{b "group: selectedValueToDisplay"}} value="eirp"> EIRP
+                            </label></div>
+                            <div class="radio"><label>
+                                <input type="radio" name="valueToDisplay" {{b "group: selectedValueToDisplay"}} value="gt"> G/T
+                            </label></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Input Value Type</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="valueType" {{b "group: selectedValueType"}} value="absolute"> Absolute
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="valueType" {{b "group: selectedValueType"}} value="relative"> Relative from Peak
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="coordinates">Pairs of Lat/Lon to find contours</label>
+                            <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
+                        </div>
+                        <button class="btn btn-primary" {{b "click: coordsSubmitted"}}>Submit</button>
+
+                    </form>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="contour-modifier">
+                    <h4>No contours yet</h4>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.col -->
+
+        <!-- Map -->
+        <div class="col-sm-9 col-xs-12">
+            <div class="map-container">
+                {{> geojsonPreview geojsonData=displayedContour}}
+            </div>
+            <br>
+            <table class="table table-bordered" id="results">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Covered beam</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+        <!-- /.col -->
+
+    </div>
+    <!-- /.row -->
+</template>

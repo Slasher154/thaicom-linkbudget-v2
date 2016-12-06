@@ -2,7 +2,7 @@
  * Created by thana on 11/30/2016.
  */
 
-import { Contours } from '/imports/api/contours/contours';
+import { Contours, TempContours } from '/imports/api/contours/contours';
 
 Meteor.methods({
     'findContoursToPlot'(options) {
@@ -27,7 +27,7 @@ Meteor.methods({
         let contourNameCount = 1;
 
         // Loop input contours
-        options.contours.forEach((contour, index) => {
+        options.contours.forEach((contour) => {
             let searchQuery = {
                 features: {
                     $elemMatch: {
@@ -57,7 +57,7 @@ Meteor.methods({
                 // Assign category
                 let categoryNumber = 0;
                 // if beam name is different to the previous one, reset the category count
-                // this means the first, second, third, etc. countour of every beam belongs to the same category
+                // this means the first, second, third, etc. contour of every beam belongs to the same category
                 if (contour.name !== currentContourName) {
                     categoryNumber = 1;
                     contourNameCount = 1;
@@ -75,15 +75,109 @@ Meteor.methods({
             else {
                 console.log('Contour is not found');
             }
-
-
-
         });
-
-        //meteor:PRIMARY> db.contours.find({ "features": { "$elemMatch": { "properties.name": "207", "properties.path": "forward" } }}, { "features": { "$elemMatch": { "properties.relativeGain": -
-        //5, "properties.parameter": "eirp" }}});
-
-
         return resultContour;
     },
+    'findContoursValueFromCoordinates' (options) {
+        console.log('Finding contour values for ' + JSON.stringify(options));
+        check(options, Object);
+        check(options.coordinates, [Object]);
+        check(options.satellite, String); // "Thaicom 4", "Thaicom 5", "Thaicom 6", etc.
+        check(options.parameter, String); // "eirp" or "gt"
+        check(options.valueType, String); // "absolute" or "relative"
+
+        let resultPolygons = {
+            "type": "FeatureCollection",
+            "features": []
+        };
+
+        let resultContours = [];
+
+        options.coordinates.forEach((coordinate) => {
+
+            let searchQuery = {
+                features: {
+                    $elemMatch: {
+                        "properties.satellite": options.satellite,
+                        "properties.parameter": options.parameter,
+                        geometry: {
+                            $geoIntersects: {
+                                $geometry: {
+                                    type: 'Point',
+                                    coordinates: [coordinate.longitude, coordinate.latitude],
+                                }
+                            }
+                        },
+                    },
+                },
+            };
+            let projectionQuery = {
+                fields: {
+                    $elemMatch: {
+                        geometry: {
+                            $geoIntersects: {
+                                $geometry: {
+                                    type: 'Point',
+                                    coordinates: [coordinate.longitude, coordinate.latitude],
+                                }
+                            }
+                        },
+                    }
+                }
+            };
+
+            // Get the array of beams that covered this point
+            let coveredBeams = Contours.find(searchQuery).fetch();
+            console.log('Number of covered beams is ' + coveredBeams.length);
+            // Find the contour with least minimum value that still cover this beam
+            coveredBeams.forEach((beam) => {
+                let sortedContours = _.sortBy(beam.features, (feature) => {
+                    return feature.properties.relativeGain;
+                });
+
+                sortedContours.reverse().forEach((contour) => {
+                    TempContours.insert(contour);
+                });
+                let anotherSearchQuery = {
+                    "properties.satellite": options.satellite,
+                    "properties.parameter": options.parameter,
+                    geometry: {
+                        $geoIntersects: {
+                            $geometry: {
+                                type: 'Point',
+                                coordinates: [coordinate.longitude, coordinate.latitude],
+                            }
+                        }
+                    },
+                };
+                let filteredContour = TempContours.find(anotherSearchQuery).fetch();
+
+                console.log('Number of filtered contours is ' + filteredContour.length);
+                // Get the last element of sorted array which is the maximum contour value
+                let bestContour = _.first(filteredContour);
+                console.log('Best contour is at ' + bestContour.properties.relativeGain + ' dB');
+
+                // Push data into result polygon array
+                resultPolygons.features.push(bestContour);
+
+                // Push data to result table
+                console.log('Best contour of ' + coordinate.longitude + ',' + coordinate.latitude + ' is beam ' + bestContour.properties.name + ' at ' + bestContour.properties.relativeGain + ' dB');
+                resultContours.push({
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude,
+                    bestBeam: bestContour.properties.name,
+                    value: bestContour.properties.relativeGain,
+                });
+
+                // Remove all document from temp contours
+                TempContours.remove({});
+            });
+        });
+
+        return {
+            resultContours: resultContours,
+            resultPolygons: resultPolygons,
+        };
+
+    }
 });

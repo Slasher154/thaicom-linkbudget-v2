@@ -3,6 +3,7 @@
  */
 
 export const Contours = new Mongo.Collection('contours');
+export const TempContours = new Mongo.Collection('tempContours');
 
 Contours.before.insert((userId, doc) => {
     doc.createdAt = Date.now();

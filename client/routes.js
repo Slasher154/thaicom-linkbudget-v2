@@ -60,6 +60,13 @@ loggedIn.route('/contours', {
     },
 });
 
+loggedIn.route('/find-contours', {
+    name: 'find-contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'findContours' });
+    },
+});
+
 loggedIn.route('/contours/upload', {
     name: 'upload-contours',
     action() {
