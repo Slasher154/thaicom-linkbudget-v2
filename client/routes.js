@@ -74,6 +74,13 @@ loggedIn.route('/contours/upload', {
     },
 });
 
+loggedIn.route('/contours/upload-gxt', {
+    name: 'upload-gxt',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'uploadGxt' });
+    },
+});
+
 loggedIn.route('/education', {
     name: 'education',
     action() {

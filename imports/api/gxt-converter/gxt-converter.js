@@ -2,7 +2,7 @@
  * Created by thana on 10/5/2016.
  */
 
-export const gxtConverter = (gxtFile) => {
+export const gxtConverter = (gxtFile, convertOptions) => {
     if (gxtFile) {
         return new Promise((resolve, reject) => {
             var reader = new FileReader();
@@ -39,8 +39,13 @@ export const gxtConverter = (gxtFile) => {
                         //console.log('Gain Text = ' + gainText);
 
                         // Extract the number behind gain=xx.xx and convert to float
-                        let relativeGain = ReadGainValue(gainText);
+                        let gainValue = ReadGainValue(gainText);
                         //console.log('Gain = ' + relativeGain);
+
+                        let relativeGain = 0;
+
+                        // If the options say this is absolute value, convert it into relative
+                        relativeGain = convertOptions.isAbsoluteValue ? convertOptions.peakValue - gainValue : gainValue;
 
                         // Remove the contour data section to leave only lon;lat texts and convert into array of lon,lat
                         // The return value will be the same as coordinates property of Geojson polygon object
@@ -144,7 +149,6 @@ export const gxtConverter = (gxtFile) => {
                         type: "Feature",
                         properties: {
                             relativeGain: relativeGain,
-                            beam: '',
                         },
                         geometry: {
                             type: "Polygon",

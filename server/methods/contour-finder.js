@@ -86,7 +86,7 @@ Meteor.methods({
         check(options.parameter, String); // "eirp" or "gt"
         check(options.valueType, String); // "absolute" or "relative"
 
-        let resultPolygons = {
+        let resultFeatureCollection = {
             "type": "FeatureCollection",
             "features": []
         };
@@ -94,6 +94,18 @@ Meteor.methods({
         let resultContours = [];
 
         options.coordinates.forEach((coordinate) => {
+
+            // Add the marker feature to our result to be displayed with label on the client
+            resultFeatureCollection.features.push({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [coordinate.longitude, coordinate.latitude],
+                },
+                properties: {
+                    pointType: 'location',
+                }
+            });
 
             let searchQuery = {
                 features: {
@@ -158,7 +170,7 @@ Meteor.methods({
                 console.log('Best contour is at ' + bestContour.properties.relativeGain + ' dB');
 
                 // Push data into result polygon array
-                resultPolygons.features.push(bestContour);
+                resultFeatureCollection.features.push(bestContour);
 
                 // Push data to result table
                 console.log('Best contour of ' + coordinate.longitude + ',' + coordinate.latitude + ' is beam ' + bestContour.properties.name + ' at ' + bestContour.properties.relativeGain + ' dB');
@@ -176,7 +188,7 @@ Meteor.methods({
 
         return {
             resultContours: resultContours,
-            resultPolygons: resultPolygons,
+            resultPolygons: resultFeatureCollection,
         };
 
     }

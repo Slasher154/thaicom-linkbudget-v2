@@ -2,11 +2,20 @@
  * Created by thana on 12/6/2016.
  */
 
+//import '/imports/api/utils/maplabel-compiled';
+
 Template.findContours.viewmodel({
     displayedContour() {
         return {
             "type": "FeatureCollection",
-            "features": []
+            "features": [{
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [100.514112, 13.859462],
+                },
+
+            }]
         }
     },
     satellites: [

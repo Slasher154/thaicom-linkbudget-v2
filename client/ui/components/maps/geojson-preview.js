@@ -6,19 +6,6 @@ import { readJsonFromAssetFiles } from '/imports/api/utils/readJson';
 
 
 Template.geojsonPreview.viewmodel({
-    onRendered() {
-        geocode(this.centerAddress()).then((result) => {
-            //console.log('Set map center coords = ' + JSON.stringify(result));
-            this.mapCenterCoordinates(result);
-        }).then(() => {
-            // Load the map after all options has been set
-            GoogleMaps.load({
-                key: Meteor.settings.public.googleMaps.apiKey,
-            });
-        }).catch((error) => {
-            Bert.alert(error, 'danger', 'fixed-top');
-        });
-    },
     onCreated() {
         // Handle map events and reactive updates here
 
@@ -35,24 +22,26 @@ Template.geojsonPreview.viewmodel({
             // Sort the data from farthest to peak to closest to peak. This lets the smallest contour get added on the map last.
             // If the biggest contour get added last, user will not be able to click on the smaller contour
             // underneath
-            data.features.sort((a, b) => a.properties.relativeGain - b.properties.relativeGain);
+            //data.features.sort((a, b) => a.properties.relativeGain - b.properties.relativeGain);
 
             // Add event listeners
+            /*
             thisMap.data.addListener('click', (event) => {
                 console.log(event.feature.getProperty('relativeGain'));
             });
-
+            */
             // Add an incoming Geojson Data from the parent template into the map
             thisMap.data.addGeoJson(data);
 
             // Set style on this map
             setStyle(thisMap);
 
-            // Draw beam label on this map
-            if (self.showBeamLabel()) drawBeamLabel(thisMap);
+            // Draw marker label on this map (find contour mode = beam name)
+            if (self.showLocationLabel()) drawLocationLabel(thisMap);
 
             // Draw contour line on this map
             if (self.showContourValue()) drawContourValue(thisMap);
+
 
             /*
             thisMap.data.addListener('click', (event) => {
@@ -63,7 +52,23 @@ Template.geojsonPreview.viewmodel({
             recenterMap(thisMap);
         });
     },
+    onRendered() {
+        geocode(this.centerAddress()).then((result) => {
+            //console.log('Set map center coords = ' + JSON.stringify(result));
+            this.mapCenterCoordinates(result);
+        }).then(() => {
+            // Load the map after all options has been set
+            GoogleMaps.load({
+                key: Meteor.settings.public.googleMaps.apiKey,
+            });
+        }).catch((error) => {
+            Bert.alert(error, 'danger', 'fixed-top');
+        });
+
+
+    },
     showBeamLabel: true,
+    showLocationLabel: true,
     showContourValue: true,
     mapCenterCoordinates: {},
     mapFeatures: [],
@@ -93,8 +98,40 @@ function addListners(map) {
 
 }
 
-function drawBeamLabel(map) {
+function drawLocationLabel(map) {
+    map.data.forEach((feature) => {
+        let geometry = feature.getGeometry();
 
+        if(geometry.getType()==='Point') {
+            /*
+            //http://stackoverflow.com/questions/30128882/how-to-get-latlng-coordinates-of-a-point-feature
+            let infowindow = new google.maps.InfoWindow({
+                content: geometry.get().lat() + ', ' + geometry.get().lng(),
+                position: geometry.get()
+            });
+            infowindow.open(map);
+            */
+            //http://stackoverflow.com/questions/5634991/styling-google-maps-infowindow
+            import '/imports/api/utils/infobubble-compiled';
+            let contentText = geometry.get().lat() + ', ' + geometry.get().lng();
+            let infoBubble = new InfoBubble({
+                map: map,
+                content: '<div class="mylabel">' + contentText + '</div>',
+                position:  geometry.get(),
+                padding: 10,
+                borderRadius: 5,
+                maxHeight: 100,
+                maxWidth: 300,
+                borderWidth: 1,
+                borderColor: '#2c2c2c',
+                //disableAutoPan: true,
+                hideCloseButton: true,
+            });
+
+            infoBubble.open();
+        }
+        else {}
+    });
 }
 
 function drawContourValue(map) {
@@ -141,6 +178,10 @@ function recenterMap(map) {
                 });
             })
         }
+        else if(geometry.getType()==='Point') {
+            bounds.extend(geometry.get());
+        }
+        else {}
     });
     map.fitBounds(bounds);
 }

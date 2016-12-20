@@ -26,6 +26,7 @@ if (Transponders.find().count() === 0) {
 
 // Insert contours from the json file into database
 
+/*
 import { Contours } from '/imports/api/contours/contours';
 if (Contours.find().count() === 0) {
     let contoursToInsert = readJsonFromAssetFiles('fixtures/contours/thaicom-4/thailand.json');
@@ -33,3 +34,4 @@ if (Contours.find().count() === 0) {
         Contours.insert(contour);
     });
 }
+*/

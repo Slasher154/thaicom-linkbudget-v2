@@ -1,0 +1,74 @@
+<template name="uploadGxt">
+    <div class="page-header">
+        <h1>Upload GXT File</h1>
+    </div>
+    <div class="row">
+        <div class="col-sm-9 col-xs-12">
+            <h4>Details of gxt file to upload</h4>
+            <br>
+            <form id="selector">
+                <div class="form-group">
+                    <label for="satellite-picker">Satellite</label>
+                    <select class="form-control" {{b "options: satellites, value: selectedSatellite"}}>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="transponder-picker">Transponder</label>
+                    <select class="form-control" {{b "options: transponders, optionsValue: id, optionsText: name, value: selectedTransponder, defaultText: 'Select a transponder', defaultValue: ''"}}>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label">Contours type to upload</label>
+                    <div class="radio"><label>
+                        <input type="radio" name="valueToDisplay" {{b "group: selectedContourToUpload"}} value="eirp"> EIRP
+                    </label></div>
+                    <div class="radio"><label>
+                        <input type="radio" name="valueToDisplay" {{b "group: selectedContourToUpload"}} value="gt"> G/T
+                    </label></div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Input Value Type</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="valueType" {{b "group: selectedValueType"}} value="absolute"> Absolute
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="valueType" {{b "group: selectedValueType"}} value="relative"> Relative from Peak
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Select GXT File</label>
+                    <input type="file" {{b "value: gxtFile"}} />
+                </div>
+                <button class="btn btn-primary" {{b "click: gxtSubmitted"}}>Submit</button>
+
+            </form>
+        </div>
+        <div class="col-sm-3 col-xs-12">
+            <h4>Recently uploaded contour</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each contour in uploadedContours}}
+                        <tr>
+                            <td>{{contour.name}}</td>
+                            <td>{{contour.value}}</td>
+                            <td>{{contour.created}}</td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>
