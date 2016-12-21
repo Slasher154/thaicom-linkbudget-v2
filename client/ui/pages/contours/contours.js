@@ -20,11 +20,12 @@ Template.contours.viewmodel({
     contours: '',
     contourSubmitted(event) {
         event.preventDefault();
-
-        let satellite = this.selectedSatellite();
-        let parameter = this.selectedValueToDisplay();
-        let valueType = this.selectedValueType();
-        let contours = convertContoursTableToObject(this.contours());
+        
+        let self = this;
+        let satellite = self.selectedSatellite();
+        let parameter = self.selectedValueToDisplay();
+        let valueType = self.selectedValueType();
+        let contours = convertContoursTableToObject(self.contours());
 
         if (!satellite) {
             Bert.alert('Please select a satellite', 'danger', 'fixed-top');
@@ -53,8 +54,13 @@ Template.contours.viewmodel({
                 else {
                     $('.map-container').empty();
                     Blaze.renderWithData(Template.geojsonPreview, {
-                        geojsonData: result,
+                        geojsonData: result.resultContour,
                     }, $('.map-container')[0]);
+                    if(result.notFoundMessages && result.notFoundMessages.length > 0) {
+                        self.logMessages(result.notFoundMessages);
+                    } else {
+                        self.logMessages([]);
+                    }
                 }
             });
 
@@ -117,4 +123,5 @@ Template.contours.viewmodel({
 
 
     },
+    logMessages: [],
 });

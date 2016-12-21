@@ -18,6 +18,8 @@ Meteor.methods({
             "features": []
         };
 
+        let notFoundMessages = [];
+
         // Sort array of contours by field name then value, name descending and value ascending (beam peak first)
         options.contours.sort(function (a, b) {
             return a.name - b.name || b.value - a.value;
@@ -52,6 +54,7 @@ Meteor.methods({
             //console.log('Projection query is ' + JSON.stringify(projectionQuery));
 
             let feature = Contours.findOne(searchQuery, projectionQuery);
+            let contourLogMessage = `Transponder ${contour.name} - ${contour.path} - ${options.parameter} | ${contour.value} dB : `;
             if (feature) {
 
                 // Assign category
@@ -70,13 +73,17 @@ Meteor.methods({
 
                 feature.features[0].properties.category = 'Category ' + categoryNumber;
                 resultContour.features.push(feature.features[0]);
-                console.log('Found feature = ' + JSON.stringify(feature));
+                console.log(contourLogMessage + `Feature found`);
             }
             else {
-                console.log('Contour is not found');
+                console.log(contourLogMessage + `Feature NOT found`);
+                notFoundMessages.push(contourLogMessage + `Contour NOT found in the database`);
             }
         });
-        return resultContour;
+        return {
+            resultContour: resultContour,
+            notFoundMessages: notFoundMessages,
+        };
     },
     'findContoursValueFromCoordinates' (options) {
         console.log('Finding contour values for ' + JSON.stringify(options));

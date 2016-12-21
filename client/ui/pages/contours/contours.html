@@ -68,12 +68,23 @@
         </div>
         <!-- /.col -->
 
-        <!-- Map -->
+
         <div class="col-sm-9 col-xs-12">
+            <!-- Map -->
             <div class="map-container">
                 {{> geojsonPreview geojsonData=displayedContour}}
             </div>
+            <!-- Log messages -->
+            <br>
+            <div class="log-messages">
+                <ul>
+                    {{#each msg in logMessages}}
+                        <li>{{msg}}</li>
+                    {{/each}}
+                </ul>
+            </div>
         </div>
+
         <!-- /.col -->
 
     </div>

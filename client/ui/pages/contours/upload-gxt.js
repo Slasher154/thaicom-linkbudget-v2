@@ -36,9 +36,11 @@ Template.uploadGxt.viewmodel({
             Bert.alert('Please upload .gxt file only', 'danger', 'fixed-top');
         }
         else {
+            let transponder = Transponders.findOne({ _id: this.selectedTransponder() });
             let properties = {
                 satellite: this.selectedSatellite(),
-                transponder: this.selectedTransponder(),
+                name: transponder.name,
+                path: transponder.path,
                 parameter: this.selectedContourToUpload(),
             };
 
@@ -47,9 +49,9 @@ Template.uploadGxt.viewmodel({
             if (this.selectedValueType === 'absolute') {
                 convertOptions.isAbsoluteValue = true;
                 if (properties.parameter === 'eirp') {
-                    convertOptions.peakValue = Transponders.findOne({ _id: properties.transponder }).saturatedEirpPeak;
+                    convertOptions.peakValue = transponder.saturatedEirpPeak;
                 } else {
-                    convertOptions.peakValue = Transponders.findOne({ _id: properties.transponder }).gtPeak;
+                    convertOptions.peakValue = transponder.gtPeak;
                 }
             }
 
@@ -69,7 +71,7 @@ Template.uploadGxt.viewmodel({
                     if (error) {
                         Bert.alert(error, 'danger', 'fixed-top');
                     } else {
-                        Bert.alert(`The ${properties.parameter} contour of transponder ${Transponders.findOne({ _id: properties.transponder }).name} is successfully inserted/updated`, 'success', 'fixed-top');
+                        Bert.alert(`The ${properties.parameter} contour of transponder ${transponder.name} is successfully inserted/updated`, 'success', 'fixed-top');
                     }
                 });
             }).catch((error) => {
@@ -82,7 +84,7 @@ Template.uploadGxt.viewmodel({
     uploadedContours() {
         return Contours.find().fetch().map((contour) => {
             return {
-                name: Transponders.findOne({ _id: contour.properties.transponder }).name,
+                name: contour.properties.name,
                 value: contour.properties.parameter,
                 created: moment(contour.modifiedAt).fromNow()
             }
