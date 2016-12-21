@@ -4,6 +4,7 @@
 
 import { Transponders } from '/imports/api/transponders/transponders';
 import { Contours } from '/imports/api/contours/contours';
+import { beamPeaks } from '/imports/api/transponders/beam-peak';
 import { gxtConverter } from '/imports/api/gxt-converter/gxt-converter.js';
 
 
@@ -27,6 +28,27 @@ Template.uploadGxt.viewmodel({
     selectedTransponder: '',
     selectedContourToUpload: '',
     selectedValueType: '',
+    peakLatitude() {
+        if(this.selectedTransponder()) {
+            console.log('TP has a value of ' + this.selectedTransponder());
+            let transponder = Transponders.findOne({_id: this.selectedTransponder()});
+            let lat = _.findWhere(beamPeaks, {
+                name: transponder.name,
+                path: transponder.path,
+            }).latitude;
+            return +lat;
+        }
+    },
+    peakLongitude() {
+        if(this.selectedTransponder()) {
+            let transponder = Transponders.findOne({_id: this.selectedTransponder()});
+            let lng = _.findWhere(beamPeaks, {
+                name: transponder.name,
+                path: transponder.path,
+            }).longitude;
+            return +lng;
+        }
+    },
     contours: '',
     gxtFile: '',
     gxtSubmitted(event) {
@@ -42,6 +64,8 @@ Template.uploadGxt.viewmodel({
                 name: transponder.name,
                 path: transponder.path,
                 parameter: this.selectedContourToUpload(),
+                peakLatitude: this.peakLatitude(),
+                peakLongitude: this.peakLongitude(),
             };
 
             let convertOptions = {};

@@ -2,6 +2,7 @@
  * Created by thana on 10/6/2016.
  */
 import { geocode, mapColors, sampleGeojsonData } from '/imports/api/maps/maps.js';
+//import { TxtOverlay } from '/imports/api/maps/txtOverlay';
 import { readJsonFromAssetFiles } from '/imports/api/utils/readJson';
 
 
@@ -42,6 +43,10 @@ Template.geojsonPreview.viewmodel({
             // Draw contour line on this map
             if (self.showContourValue()) drawContourValue(thisMap);
 
+            // Draw beam label on this map
+            if (self.showBeamLabel()) {
+                drawBeamLabel(thisMap, self.beamLabels());
+            }
 
             /*
             thisMap.data.addListener('click', (event) => {
@@ -68,6 +73,7 @@ Template.geojsonPreview.viewmodel({
 
     },
     showBeamLabel: true,
+    beamLabels: [],
     showLocationLabel: true,
     showContourValue: true,
     mapCenterCoordinates: {},
@@ -99,18 +105,19 @@ function addListners(map) {
 }
 
 function drawLocationLabel(map) {
+    /*
     map.data.forEach((feature) => {
         let geometry = feature.getGeometry();
 
         if(geometry.getType()==='Point') {
-            /*
+
             //http://stackoverflow.com/questions/30128882/how-to-get-latlng-coordinates-of-a-point-feature
             let infowindow = new google.maps.InfoWindow({
                 content: geometry.get().lat() + ', ' + geometry.get().lng(),
                 position: geometry.get()
             });
             infowindow.open(map);
-            */
+
             //http://stackoverflow.com/questions/5634991/styling-google-maps-infowindow
             import '/imports/api/utils/infobubble-compiled';
             let contentText = geometry.get().lat() + ', ' + geometry.get().lng();
@@ -132,6 +139,35 @@ function drawLocationLabel(map) {
         }
         else {}
     });
+    */
+}
+
+function drawBeamLabel(map, labels) {
+    /*
+    map.data.forEach((feature) => {
+        let beamLabels = [];
+        let geometry = feature.getGeometry();
+        if(geometry.getType()==='Point' && feature.getProperty('labelType') === 'beamLabel') {
+            // Draw text overlay
+            import { TxtOverlay } from '/imports/api/maps/txtOverlay';
+            let contentText = feature.getProperty('labelText');
+            let latlng = new google.maps.LatLng(geometry.get().lat(), geometry.get().lng());
+            let customTxt = `<div>${contentText}</div>`;
+            beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
+        }
+        else {}
+    });
+    */
+    labels.forEach((label) => {
+        //console.log(JSON.stringify(label));
+        let beamLabels = [];
+        import { TxtOverlay } from '/imports/api/maps/txtOverlay';
+        let contentText = label.text;
+        let latlng = new google.maps.LatLng(label.latitude, label.longitude);
+        let customTxt = `<div>${contentText}</div>`;
+        beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
+    });
+
 }
 
 function drawContourValue(map) {

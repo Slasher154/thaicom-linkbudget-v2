@@ -19,6 +19,7 @@ Meteor.methods({
         };
 
         let notFoundMessages = [];
+        let beamLabels = []; // Text and coordinates of beam peak to show labels on the map
 
         // Sort array of contours by field name then value, name descending and value ascending (beam peak first)
         options.contours.sort(function (a, b) {
@@ -42,6 +43,7 @@ Meteor.methods({
             };
             let projectionQuery = {
                 fields: {
+                    properties: 1,
                     features: {
                         $elemMatch: {
                             "properties.relativeGain": contour.value,
@@ -74,15 +76,28 @@ Meteor.methods({
                 feature.features[0].properties.category = 'Category ' + categoryNumber;
                 resultContour.features.push(feature.features[0]);
                 console.log(contourLogMessage + `Feature found`);
+
+                // Add beam peak to beam labels array
+                if (!_.findWhere(beamLabels, { text: feature.properties.name })) {
+                    beamLabels.push({
+                        text: feature.properties.name,
+                        latitude: feature.properties.peakLatitude,
+                        longitude: feature.properties.peakLongitude,
+                    });
+                }
+
             }
             else {
                 console.log(contourLogMessage + `Feature NOT found`);
                 notFoundMessages.push(contourLogMessage + `Contour NOT found in the database`);
             }
         });
+        console.log('beam labels = ' + JSON.stringify(beamLabels));
+        console.log('unique beam labels = ' + JSON.stringify(_.uniq(beamLabels)));
         return {
             resultContour: resultContour,
             notFoundMessages: notFoundMessages,
+            beamLabels: _.uniq(beamLabels), // remove duplicates
         };
     },
     'findContoursValueFromCoordinates' (options) {

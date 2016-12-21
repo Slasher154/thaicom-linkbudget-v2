@@ -2,6 +2,7 @@
  * Created by thana on 9/15/2016.
  */
 
+
 Template.contours.viewmodel({
     displayedContour() {
         return {
@@ -55,6 +56,7 @@ Template.contours.viewmodel({
                     $('.map-container').empty();
                     Blaze.renderWithData(Template.geojsonPreview, {
                         geojsonData: result.resultContour,
+                        beamLabels: result.beamLabels,
                     }, $('.map-container')[0]);
                     if(result.notFoundMessages && result.notFoundMessages.length > 0) {
                         self.logMessages(result.notFoundMessages);
@@ -67,9 +69,8 @@ Template.contours.viewmodel({
         }
 
         function convertContoursTableToObject(contours) {
-            console.log(contours);
+
             let rows = contours.split('\n');
-            console.log('rows = ' + rows);
             let formattedContours = [];
 
             // Remove the last row if it is blank. This happens when paste from excel and the cursor enter a new line
@@ -91,7 +92,6 @@ Template.contours.viewmodel({
                 // 2nd column = path (fwd, rtn) for HTS, = value for conventional
                 if (columns.length == 3) { // HTS
                     let path = columns[1].toLowerCase();
-                    console.log('Path = ' + path);
                     if(_.contains(['forward','fwd'], path)) {
                         path = 'forward';
                     }

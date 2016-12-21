@@ -27,7 +27,7 @@ export const mapColors =  [
         '#e67e22', // Carrot
         '#e74c3c', // Alizarin (red)
         '#95a5a6', // Concrete
-    ];
+    ]
 
 export const sampleGeojsonData = {
     "type": "FeatureCollection",

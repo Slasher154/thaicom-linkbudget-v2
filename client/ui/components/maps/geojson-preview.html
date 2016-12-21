@@ -1,7 +1,10 @@
 <template name="geojsonPreview">
     <style type="text/css">
-        /* Hide close button on google masp infowindow */
-        .gm-style-iw + div {display: none;}
+        .beamLabel {
+            position: absolute;
+            background-color: yellow;
+            font-weight: bold;
+        }
     </style>
     <div class="map-container" style="height: {{mapHeight}}">
         {{> googleMap name="contourMap" options=mapOptions}}
