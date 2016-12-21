@@ -7,7 +7,13 @@ Template.contours.viewmodel({
     displayedContour() {
         return {
             "type": "FeatureCollection",
-            "features": []
+            "features": [{
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [100.514112, 13.859462],
+                },
+            }],
         }
     },
     satellites: [
@@ -53,11 +59,11 @@ Template.contours.viewmodel({
                     Bert.alert(error.reason, 'danger', 'fixed-top');
                 }
                 else {
-                    $('.map-container').empty();
-                    Blaze.renderWithData(Template.geojsonPreview, {
+                    self.mapData({
                         geojsonData: result.resultContour,
                         beamLabels: result.beamLabels,
-                    }, $('.map-container')[0]);
+                    });
+                    self.renderMap();
                     if(result.notFoundMessages && result.notFoundMessages.length > 0) {
                         self.logMessages(result.notFoundMessages);
                     } else {
@@ -124,4 +130,22 @@ Template.contours.viewmodel({
 
     },
     logMessages: [],
+    mapData:{
+            geojsonData: {
+                "type": "FeatureCollection",
+                "features": [{
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [100.514112, 13.859462],
+                    },
+                }],
+            }
+    },
+    renderMap() {
+        $('.map-container').empty();
+        Blaze.renderWithData(Template.geojsonPreview, {
+            mapData: this.mapData(),
+        } , $('.map-container')[0]);
+    }
 });

@@ -8,7 +8,8 @@ Meteor.methods({
     uploadContour: function (featureCollection) {
         check(featureCollection, Object);
         Contours.upsert({
-            'properties.transponder': featureCollection.properties.transponder,
+            'properties.name': featureCollection.properties.name,
+            'properties.path': featureCollection.properties.path,
             'properties.satellite': featureCollection.properties.satellite,
             'properties.parameter': featureCollection.properties.parameter,
         }, {

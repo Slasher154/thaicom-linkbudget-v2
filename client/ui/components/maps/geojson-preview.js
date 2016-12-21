@@ -18,7 +18,7 @@ Template.geojsonPreview.viewmodel({
 
             // If geojson data of this template has value (from template arguments set by the parent template),
             // use that data. Otherwise, load the sample data.
-            let data = self.geojsonData() ? self.geojsonData() : sampleGeojsonData;
+            let data = self.mapData();
 
             // Sort the data from farthest to peak to closest to peak. This lets the smallest contour get added on the map last.
             // If the biggest contour get added last, user will not be able to click on the smaller contour
@@ -32,7 +32,7 @@ Template.geojsonPreview.viewmodel({
             });
             */
             // Add an incoming Geojson Data from the parent template into the map
-            thisMap.data.addGeoJson(data);
+            thisMap.data.addGeoJson(data.geojsonData);
 
             // Set style on this map
             setStyle(thisMap);
@@ -44,8 +44,8 @@ Template.geojsonPreview.viewmodel({
             if (self.showContourValue()) drawContourValue(thisMap);
 
             // Draw beam label on this map
-            if (self.showBeamLabel()) {
-                drawBeamLabel(thisMap, self.beamLabels());
+            if (self.showBeamLabel() && data.beamLabels) {
+                drawBeamLabel(thisMap, data.beamLabels);
             }
 
             /*
@@ -96,7 +96,7 @@ Template.geojsonPreview.viewmodel({
     },
     centerAddress: 'Thailand', // Default map center
     editable: false,
-    geojsonData: null,
+    mapData: null,
 
 });
 
@@ -143,21 +143,6 @@ function drawLocationLabel(map) {
 }
 
 function drawBeamLabel(map, labels) {
-    /*
-    map.data.forEach((feature) => {
-        let beamLabels = [];
-        let geometry = feature.getGeometry();
-        if(geometry.getType()==='Point' && feature.getProperty('labelType') === 'beamLabel') {
-            // Draw text overlay
-            import { TxtOverlay } from '/imports/api/maps/txtOverlay';
-            let contentText = feature.getProperty('labelText');
-            let latlng = new google.maps.LatLng(geometry.get().lat(), geometry.get().lng());
-            let customTxt = `<div>${contentText}</div>`;
-            beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
-        }
-        else {}
-    });
-    */
     labels.forEach((label) => {
         //console.log(JSON.stringify(label));
         let beamLabels = [];

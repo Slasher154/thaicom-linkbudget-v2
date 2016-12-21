@@ -57,7 +57,6 @@
                             <textarea class="form-control" id="contour-data" rows="10" {{b "value: contours"}}></textarea>
                         </div>
                         <button class="btn btn-primary" {{b "click: contourSubmitted"}}>Submit</button>
-
                     </form>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="contour-modifier">
@@ -72,7 +71,7 @@
         <div class="col-sm-9 col-xs-12">
             <!-- Map -->
             <div class="map-container">
-                {{> geojsonPreview geojsonData=displayedContour}}
+                {{> geojsonPreview mapData=mapData}}
             </div>
             <!-- Log messages -->
             <br>

@@ -106,7 +106,11 @@ Template.uploadGxt.viewmodel({
 
     },
     uploadedContours() {
-        return Contours.find().fetch().map((contour) => {
+        // Sort by modified time - latest goes first
+        let contours = _.sortBy(Contours.find().fetch(), (c) => {
+            return c.modifiedAt
+        }).reverse();
+        return contours.map((contour) => {
             return {
                 name: contour.properties.name,
                 value: contour.properties.parameter,

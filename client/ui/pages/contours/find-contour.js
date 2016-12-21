@@ -5,8 +5,8 @@
 //import '/imports/api/utils/maplabel-compiled';
 
 Template.findContours.viewmodel({
-    displayedContour() {
-        return {
+    mapData: {
+        geojsonData: {
             "type": "FeatureCollection",
             "features": [{
                 type: "Feature",
@@ -16,7 +16,7 @@ Template.findContours.viewmodel({
                 },
 
             }]
-        }
+        },
     },
     satellites: [
         { id: 'Thaicom 4', name: 'Thaicom 4' },
@@ -62,7 +62,9 @@ Template.findContours.viewmodel({
                 else {
                     $('.map-container').empty();
                     Blaze.renderWithData(Template.geojsonPreview, {
-                        geojsonData: result.resultPolygons,
+                        mapData: {
+                            geojsonData: result.resultPolygons,
+                        },
                     }, $('.map-container')[0]);
 
                     let $tbody = $('#results').find('tbody').empty();
