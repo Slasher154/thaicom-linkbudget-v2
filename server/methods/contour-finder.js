@@ -83,6 +83,7 @@ Meteor.methods({
                         text: feature.properties.name,
                         latitude: feature.properties.peakLatitude,
                         longitude: feature.properties.peakLongitude,
+                        visible: true,
                     });
                 }
 

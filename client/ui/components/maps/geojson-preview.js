@@ -147,10 +147,13 @@ function drawBeamLabel(map, labels) {
         //console.log(JSON.stringify(label));
         let beamLabels = [];
         import { TxtOverlay } from '/imports/api/maps/txtOverlay';
-        let contentText = label.text;
-        let latlng = new google.maps.LatLng(label.latitude, label.longitude);
-        let customTxt = `<div>${contentText}</div>`;
-        beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
+        if (label.visible) {
+            let contentText = label.text;
+            let latlng = new google.maps.LatLng(label.latitude, label.longitude);
+            let fontSize = label.fontSize ? label.fontSize + 'px' : '1px';
+            let customTxt = `<div style="font-size: ${fontSize}">${contentText}</div>`;
+            beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
+        }
     });
 
 }
@@ -160,7 +163,7 @@ function drawContourValue(map) {
 }
 
 function setStyle(map) {
-
+    /*
     // Color contour lines differently for each category specified in feature properties
     var distinctCategories = [];
     map.data.setStyle((feature) => {
@@ -180,6 +183,25 @@ function setStyle(map) {
             fillOpacity: 0,
         }
     });
+    */
+    // Color contour lines based on color properties
+    map.data.setStyle((feature) => {
+       let geometry = feature.getGeometry();
+        // Only set color on Polygon objects
+        if(geometry.getType() === 'Polygon') {
+            let strokeColor = feature.getProperty('color');
+            let strokeWeight = feature.getProperty('strokeWeight');
+            return {
+                strokeColor: strokeColor,
+                strokeWeight: strokeWeight,
+                fillOpacity: 0,
+            };
+        } else {
+            return {
+                fillOpacity: 0,
+            };
+        }
+    });
 }
 
 function recenterMap(map) {
@@ -190,7 +212,7 @@ function recenterMap(map) {
     // Source: http://stackoverflow.com/questions/24401240/how-to-get-latlngbounds-of-feature-polygon-geometry-in-google-maps-v3
     map.data.forEach((feature) => {
         let geometry = feature.getGeometry();
-        if(geometry.getType()==='Polygon') {
+        if(geometry.getType() === 'Polygon') {
             geometry.getArray().forEach((path) => {
                 //iterate over the points in the path
                 path.getArray().forEach(function(latLng){
