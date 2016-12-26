@@ -21,7 +21,7 @@
                 <li role="presentation" class="active"><a href="#input-selector" aria-controls="input-selector" role="tab" data-toggle="tab">Input</a>
                 </li>
                 <li role="presentation"><a href="#contour-modifier" aria-controls="contour-modifier" role="tab"
-                                           data-toggle="tab">Contours</a></li>
+                                           data-toggle="tab">Formatting</a></li>
 
             </ul>
             <!-- Tab panes -->
@@ -57,6 +57,17 @@
                                 </label>
                             </div>
                         </div>
+                        <input {{b "check: findSpecificTransponder"}} type="checkbox"> <label>Find contour on specific transponder</label>
+                        <p class="help-block">By default, the program returns the best beam only.</p>
+                        <br>
+                        <!-- Transponder Selector -->
+                        <div class="form-group" {{b "visible: findSpecificTransponder"}}>
+                            <label for="transponder-picker">Transponder</label>
+                            <select class="form-control" {{b "options: transponders, optionsValue: id, optionsText: name, value: selectedTransponder, defaultText: 'Select a transponder', defaultValue: ''"}}>
+                            </select>
+                        </div>
+
+                        <!-- Pairs of Lat/Lon input -->
                         <div class="form-group">
                             <label for="coordinates">Pairs of Lat/Lon to find contours</label>
                             <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
@@ -84,7 +95,7 @@
                     <th>Latitude</th>
                     <th>Longitude</th>
                     <th>Covered beam</th>
-                    <th>Value</th>
+                    <th>{{valueText}}</th>
                 </tr>
                 </thead>
                 <tbody>

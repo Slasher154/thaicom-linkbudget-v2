@@ -3,8 +3,13 @@
  */
 
 //import '/imports/api/utils/maplabel-compiled';
+import { Transponders } from '/imports/api/transponders/transponders';
+
 
 Template.findContours.viewmodel({
+    onCreated(){
+        Meteor.subscribe('allTranspondersWithBasicInfo');
+    },
     mapData: {
         geojsonData: {
             "type": "FeatureCollection",
@@ -28,6 +33,19 @@ Template.findContours.viewmodel({
     selectedValueToDisplay: '',
     selectedValueType: '',
     coordinates: '',
+    findSpecificTransponder: false,
+    transponders() {
+        return Transponders.find({
+            satellite: this.selectedSatellite()
+        }).fetch().map((tp) => {
+            return {
+                id: tp._id,
+                name: `${tp.name} (${tp.path})`
+            };
+        });
+    },
+    selectedTransponder: '',
+    valueText: 'Relative Contour (dB)',
     resultShown: false,
     coordsSubmitted(event) {
         event.preventDefault();
@@ -59,6 +77,14 @@ Template.findContours.viewmodel({
                 valueType: valueType,
                 coordinates: coords,
             };
+
+            // Check if user specifies the transponder
+            if (this.findSpecificTransponder()  && this.selectedTransponder()) {
+                let transponder = Transponders.findOne({ _id: this.selectedTransponder() });
+                options.name = transponder.name;
+                options.path = transponder.path;
+            }
+
             Meteor.call('findContoursValueFromCoordinates', options, (error, result) => {
                 if (error) {
                     Bert.alert(error.reason, 'danger', 'fixed-top');
