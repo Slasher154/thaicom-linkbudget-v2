@@ -18,6 +18,7 @@ Template.findContours.viewmodel({
             }]
         },
     },
+    mapHeight: '700px',
     satellites: [
         { id: 'Thaicom 4', name: 'Thaicom 4' },
         { id: 'Thaicom 5', name: 'Thaicom 5' },
@@ -27,13 +28,16 @@ Template.findContours.viewmodel({
     selectedValueToDisplay: '',
     selectedValueType: '',
     coordinates: '',
+    resultShown: false,
     coordsSubmitted(event) {
         event.preventDefault();
+        $('.loading').text('Searching for contours.....');
+        let self = this;
 
-        let satellite = this.selectedSatellite();
-        let parameter = this.selectedValueToDisplay();
-        let valueType = this.selectedValueType();
-        let coords = convertCoordsTableToObject(this.coordinates());
+        let satellite = self.selectedSatellite();
+        let parameter = self.selectedValueToDisplay();
+        let valueType = self.selectedValueType();
+        let coords = convertCoordsTableToObject(self.coordinates());
 
         if (!satellite) {
             Bert.alert('Please select a satellite', 'danger', 'fixed-top');
@@ -61,10 +65,13 @@ Template.findContours.viewmodel({
                 }
                 else {
                     $('.map-container').empty();
+                    //console.log(JSON.stringify(result));
                     Blaze.renderWithData(Template.geojsonPreview, {
                         mapData: {
                             geojsonData: result.resultPolygons,
+                            beamLabels: result.beamLabels,
                         },
+                        mapHeight: self.mapHeight(),
                     }, $('.map-container')[0]);
 
                     let $tbody = $('#results').find('tbody').empty();
@@ -82,6 +89,9 @@ Template.findContours.viewmodel({
                     });
                     $tbody.append(tableHtml);
                 }
+                
+                $('.loading').text('');
+                self.resultShown(true);
             });
 
         }

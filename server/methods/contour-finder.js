@@ -3,6 +3,7 @@
  */
 
 import { Contours, TempContours } from '/imports/api/contours/contours';
+import { mapColors } from '/imports/api/maps/maps.js';
 
 Meteor.methods({
     'findContoursToPlot'(options) {
@@ -55,9 +56,13 @@ Meteor.methods({
             //console.log('---------------');
             //console.log('Projection query is ' + JSON.stringify(projectionQuery));
 
-            let feature = Contours.findOne(searchQuery, projectionQuery);
+            // Return a feature collection along with single feature (query from projection query) that matches the relative gain
+            // If there is no feature for that relative gain (such as number lower than -15dB for spot beams), the return document
+            // will have only the properties attribute but not features (undefined)
+            let featureCollection = Contours.findOne(searchQuery, projectionQuery);
+            //console.log(JSON.stringify(featureCollection));
             let contourLogMessage = `Transponder ${contour.name} - ${contour.path} - ${options.parameter} | ${contour.value} dB : `;
-            if (feature) {
+            if (featureCollection.features) {
 
                 // Assign category
                 let categoryNumber = 0;
@@ -73,16 +78,16 @@ Meteor.methods({
 
                 //console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
 
-                feature.features[0].properties.category = 'Category ' + categoryNumber;
-                resultContour.features.push(feature.features[0]);
+                featureCollection.features[0].properties.category = 'Category ' + categoryNumber;
+                resultContour.features.push(featureCollection.features[0]);
                 console.log(contourLogMessage + `Feature found`);
 
                 // Add beam peak to beam labels array
-                if (!_.findWhere(beamLabels, { text: feature.properties.name })) {
+                if (!_.findWhere(beamLabels, { text: featureCollection.properties.name })) {
                     beamLabels.push({
-                        text: feature.properties.name,
-                        latitude: feature.properties.peakLatitude,
-                        longitude: feature.properties.peakLongitude,
+                        text: featureCollection.properties.name,
+                        latitude: featureCollection.properties.peakLatitude,
+                        longitude: featureCollection.properties.peakLongitude,
                         visible: true,
                     });
                 }
@@ -115,6 +120,7 @@ Meteor.methods({
         };
 
         let resultContours = [];
+        let beamLabels = [];
 
         options.coordinates.forEach((coordinate) => {
 
@@ -165,7 +171,9 @@ Meteor.methods({
             let coveredBeams = Contours.find(searchQuery).fetch();
             console.log('Number of covered beams is ' + coveredBeams.length);
             // Find the contour with least minimum value that still cover this beam
-            coveredBeams.forEach((beam) => {
+            coveredBeams.forEach((beam, index) => {
+
+                /*
                 let sortedContours = _.sortBy(beam.features, (feature) => {
                     return feature.properties.relativeGain;
                 });
@@ -173,7 +181,15 @@ Meteor.methods({
                 sortedContours.reverse().forEach((contour) => {
                     TempContours.insert(contour);
                 });
-                let anotherSearchQuery = {
+                */
+
+                // Insert all polygons in this beam to the temporary contours MongoDB collection to perform mongodb json search against
+                // all contours, not as a whole feature collection
+                beam.features.forEach((contour) => {
+                    TempContours.insert(contour);
+                });
+
+                let contourSearchQuery = {
                     "properties.satellite": options.satellite,
                     "properties.parameter": options.parameter,
                     geometry: {
@@ -185,12 +201,20 @@ Meteor.methods({
                         }
                     },
                 };
-                let filteredContour = TempContours.find(anotherSearchQuery).fetch();
+
+                // Returns only features which contains the lat/lon
+                let filteredContour = TempContours.find(contourSearchQuery).fetch();
 
                 console.log('Number of filtered contours is ' + filteredContour.length);
-                // Get the last element of sorted array which is the maximum contour value
-                let bestContour = _.first(filteredContour);
+
+                // Get the element which has the lowest relative gain value = best contour
+                let bestContour = _.max(filteredContour, (contour) => {
+                    return contour.properties.relativeGain;
+                });
                 console.log('Best contour is at ' + bestContour.properties.relativeGain + ' dB');
+
+                // Add color property to the line
+                bestContour.properties.color = mapColors[index];
 
                 // Push data into result polygon array
                 resultFeatureCollection.features.push(bestContour);
@@ -204,6 +228,18 @@ Meteor.methods({
                     value: bestContour.properties.relativeGain,
                 });
 
+                // Push the beam labels
+                // Add beam peak to beam labels array
+                if (!_.findWhere(beamLabels, { text: bestContour.properties.name })) {
+                    beamLabels.push({
+                        text: bestContour.properties.name,
+                        latitude: bestContour.properties.peakLatitude,
+                        longitude: bestContour.properties.peakLongitude,
+                        fontSize: 12,
+                        visible: true,
+                    });
+                }
+
                 // Remove all document from temp contours
                 TempContours.remove({});
             });
@@ -212,6 +248,7 @@ Meteor.methods({
         return {
             resultContours: resultContours,
             resultPolygons: resultFeatureCollection,
+            beamLabels: beamLabels,
         };
 
     }

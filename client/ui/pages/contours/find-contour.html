@@ -1,16 +1,21 @@
 <template name="findContours">
     <style type="text/css">
-        .map-container {
-            height: 550px;
+        .main-container {
+            width: 100%;
+            max-width: none;
+            padding-left: 20px;
+            padding-top: 60px;
         }
     </style>
+    <!--
     <div class="page-header">
         <h1>Find Thaicom Satellite Contours from Location</h1>
     </div>
+    -->
     <div class="row">
 
         <!-- Selectors -->
-        <div class="col-sm-3 col-xs-12 form-group">
+        <div class="col-sm-2 col-xs-12 form-group">
 
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#input-selector" aria-controls="input-selector" role="tab" data-toggle="tab">Input</a>
@@ -68,26 +73,32 @@
         </div>
         <!-- /.col -->
 
-        <!-- Map -->
-        <div class="col-sm-9 col-xs-12">
-            <div class="map-container">
-                {{> geojsonPreview mapData=mapData}}
-            </div>
-            <br>
-            <table class="table table-bordered" id="results">
+        <!-- Search Result-->
+        <div class="col-sm-4 col-xs-12">
+            <h4>Search Results</h4>
+            <div class="loading"></div>
+            <table class="table table-bordered" id="results" {{b "visible: resultShown"}}>
                 <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Latitude</th>
-                        <th>Longitude</th>
-                        <th>Covered beam</th>
-                        <th>Value</th>
-                    </tr>
+                <tr>
+                    <th>No.</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Covered beam</th>
+                    <th>Value</th>
+                </tr>
                 </thead>
                 <tbody>
 
                 </tbody>
             </table>
+        </div>
+
+        <!-- Map -->
+        <div class="col-sm-6 col-xs-12">
+            <div class="map-container">
+                {{> geojsonPreview mapData=mapData mapHeight=mapHeight}}
+            </div>
+
         </div>
         <!-- /.col -->
 

@@ -78,7 +78,7 @@ Template.geojsonPreview.viewmodel({
     showContourValue: true,
     mapCenterCoordinates: {},
     mapFeatures: [],
-    mapHeight: '550px',
+    mapHeight: '500px',
     mapName: 'contourMap',
     mapOptions() {
         if (GoogleMaps.loaded()) {
@@ -150,7 +150,7 @@ function drawBeamLabel(map, labels) {
         if (label.visible) {
             let contentText = label.text;
             let latlng = new google.maps.LatLng(label.latitude, label.longitude);
-            let fontSize = label.fontSize ? label.fontSize + 'px' : '1px';
+            let fontSize = label.fontSize ? label.fontSize + 'px' : '12px';
             let customTxt = `<div style="font-size: ${fontSize}">${contentText}</div>`;
             beamLabels.push(new TxtOverlay(latlng, customTxt, "beamLabel", map));
         }

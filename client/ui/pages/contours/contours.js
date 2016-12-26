@@ -32,7 +32,7 @@ Template.contours.viewmodel({
     contourColors: [],
     contourSubmitted(event) {
         event.preventDefault();
-        
+
         let self = this;
         let satellite = self.selectedSatellite();
         let parameter = self.selectedValueToDisplay();
@@ -72,6 +72,12 @@ Template.contours.viewmodel({
                     self.renderMap();
                     if(result.notFoundMessages && result.notFoundMessages.length > 0) {
                         self.logMessages(result.notFoundMessages);
+                        // Construct the message
+                        let listMessages = result.notFoundMessages.map((msg) => {
+                            return `<li>${msg}</li>`;
+                        })
+                        Bert.alert(`<ul>${listMessages.join('')}</ul>`, 'danger', 'fixed-top');
+
                     } else {
                         self.logMessages([]);
                     }
@@ -146,6 +152,7 @@ Template.contours.viewmodel({
                 }],
             }
     },
+    mapHeight: '700px',
     showLabel: true,
     showLabelChanged() {
         this.applyFormatting();
@@ -268,6 +275,7 @@ Template.contours.viewmodel({
         $('.map-container').empty();
         Blaze.renderWithData(Template.geojsonPreview, {
             mapData: this.mapData(),
+            mapHeight: this.mapHeight(),
         } , $('.map-container')[0]);
     }
 });
