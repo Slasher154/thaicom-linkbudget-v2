@@ -32,6 +32,7 @@ Meteor.methods({
 
         // Loop input contours
         options.contours.forEach((contour) => {
+
             let searchQuery = {
                 features: {
                     $elemMatch: {
@@ -42,12 +43,18 @@ Meteor.methods({
                     }
                 }
             };
+            // The value query must use the range query instead of exact match to avoid the decimal precision problem
+            // i.e. the input and value store in database is not the same double in terms of how mongodb treat the double
+            // http://stackoverflow.com/questions/32798386/mongodb-how-to-get-n-decimals-precision-in-a-query
             let projectionQuery = {
                 fields: {
                     properties: 1,
                     features: {
                         $elemMatch: {
-                            "properties.relativeGain": contour.value,
+                            "properties.relativeGain": {
+                                $gte: contour.value - 0.05,
+                                $lt: contour.value + 0.05,
+                            },
                         }
                     }
                 }

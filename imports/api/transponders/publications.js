@@ -4,7 +4,7 @@
 
 import { Transponders } from '/imports/api/transponders/transponders';
 
-Meteor.publish('allTranspondersWithBasicInfo', function () {
+Meteor.publish('allTranspondersWithBasicInfo', () => {
     return Transponders.find({}, {
         fields: {
             name: 1,
@@ -14,6 +14,20 @@ Meteor.publish('allTranspondersWithBasicInfo', function () {
             type: 1,
             gtPeak: 1,
             saturatedEirpPeak: 1,
+        },
+    });
+});
+
+Meteor.publish('transpondersWithDefinedContours', () => {
+    return Transponders.find({}, {
+        fields: {
+            name: 1,
+            beam: 1,
+            satellite: 1,
+            path: 1,
+            type: 1,
+            definedContours: 1,
+            countries: 1,
         },
     });
 });

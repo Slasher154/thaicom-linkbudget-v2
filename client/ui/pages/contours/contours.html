@@ -57,11 +57,58 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" {{b "visible: isHts"}}>
+                            <label class="control-label">Input Methods</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="inputMethod" {{b "group: selectedInputMethod, check: beamsAndDefinedContourSelected"}} value="beamsAndDefinedContours"> Beams & Defined Contours
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="inputMethod" {{b "group: selectedInputMethod, check: pasteFromExcelSelected"}} value="pasteFromExcel"> Paste from Excel
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                            <label for="country-picker">Select Country</label>
+                            <select id="country-picker" class="form-control" {{b "options: countries, value: selectedCountry, defaultText: 'Select country', defaultValue: '', change: countryChanged"}}>
+                            </select>
+                        </div>
+                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                            <label for="hts-beam-picker">Select Beam(s)</label>
+                            <!--
+                            <select id="hts-beam-picker" class="form-control select-picker" {{b "options: transponders, optionsValue: id, optionsText: name, value: selectedTransponders"}}>
+                            -->
+                            <select id="hts-beam-picker" class="form-control select-picker"  {{b "visible: isCountrySelected"}} data-dropup-auto="false" multiple>
+
+                            </select>
+                        </div>
+                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                            <label>Select Defined Contours</label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" value="50%" {{b "group: selectedDefinedContours"}}> 50%
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" value="eoc" {{b "group: selectedDefinedContours"}}> EOC
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" value="eoc-2" {{b "group: selectedDefinedContours"}}> EOC-2
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" {{b "visible: pasteFromExcelSelected"}}>
                             <label for="contour-data">Beam and Contour Line to be Drawn</label>
                             <textarea class="form-control" id="contour-data" rows="10" {{b "value: contours"}}></textarea>
                         </div>
                         <button class="btn btn-primary" {{b "click: contourSubmitted"}}>Submit</button>
+
+
                     </form>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="contour-modifier">

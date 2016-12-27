@@ -3,31 +3,83 @@
  */
 
 import { mapColors } from '/imports/api/maps/maps.js';
+import { Satellites } from '/imports/api/satellites/satellites';
+import { Transponders } from '/imports/api/transponders/transponders';
 
 
 Template.contours.viewmodel({
+    onCreated(){
+        Meteor.subscribe('allThaicomSatellites');
+        Meteor.subscribe('transpondersWithDefinedContours');
+    },
     onRendered(){
+        $('.select-picker').selectpicker();
     },
-    displayedContour() {
-        return {
-            "type": "FeatureCollection",
-            "features": [{
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [100.514112, 13.859462],
-                },
-            }],
-        }
+    satellites() {
+        return Satellites.find().fetch().map((satellite) => {
+            return {
+                id: satellite.name,
+                name: satellite.name,
+            };
+        });
     },
-    satellites: [
-        { id: 'Thaicom 4', name: 'Thaicom 4' },
-        { id: 'Thaicom 5', name: 'Thaicom 5' },
-        { id: 'Thaicom 6', name: 'Thaicom 6' },
-    ],
     selectedSatellite: '',
     selectedValueToDisplay: '',
     selectedValueType: '',
+    selectedInputMethod: '',
+    isConventional() {
+      if (this.selectedSatellite()) {
+          return this.checkSatelliteType(this.selectedSatellite(), 'Conventional');
+      }
+      return false;
+    },
+    isHts() {
+        if (this.selectedSatellite()) {
+            return this.checkSatelliteType(this.selectedSatellite(), 'HTS');
+        }
+        return false;
+    },
+    checkSatelliteType(name, typeToCheck) {
+        return Satellites.findOne({name: name}).type === typeToCheck;
+    },
+    beamsAndDefinedContourSelected: false,
+    pasteFromExcelSelected: false,
+    countries() {
+      if (this.isHts()) {
+          // Get all countries from the transponders
+          let transponders = Transponders.find({ satellite: this.selectedSatellite() }).fetch();
+          let countries = [];
+          // Each transponder stores the array of country that it covers. To list all the countries, we iterate through
+          // each transponder and keep union the array of country
+          transponders.forEach((tp) => {
+              countries = _.union(countries, tp.countries);
+          });
+          // Return the sorted list alphabetically
+          return countries.sort();
+      }
+      return [];
+    },
+    selectedCountry: '',
+    isCountrySelected() {
+        return this.selectedCountry() != '';
+    },
+    countryChanged(event){
+        //$('.select-picker').selectpicker();
+       let $beamPicker = $('#hts-beam-picker');
+        $beamPicker.find($('option')).remove();
+        if (this.selectedCountry()) {
+            let transponders = Transponders.find({
+                countries: {
+                    $in: [this.selectedCountry()]
+                }
+            }).fetch();
+            let options =  transponders.map((tp) => {
+                return `<option value="${tp._id}">${tp.name}-${tp.path}</option>`;
+            });
+            $beamPicker.append(options).selectpicker('refresh');
+        }
+    },
+    selectedDefinedContours: [],
     contours: '',
     contourColors: [],
     contourSubmitted(event) {
@@ -37,65 +89,146 @@ Template.contours.viewmodel({
         let satellite = self.selectedSatellite();
         let parameter = self.selectedValueToDisplay();
         let valueType = self.selectedValueType();
-        let contours = convertContoursTableToObject(self.contours());
+        let contours = [];
 
         if (!satellite) {
             Bert.alert('Please select a satellite', 'danger', 'fixed-top');
+            return false;
         }
-        else if (!parameter) {
+        if (!parameter) {
             Bert.alert('Please select either EIRP or G/T', 'danger', 'fixed-top');
+            return false;
         }
-        else if (!valueType) {
+        if (!valueType) {
             Bert.alert('Please select either absolute value or relative from peak value', 'danger', 'fixed-top');
+            return false;
         }
-        else if (!contours) {
+
+        // HTS + Beams and Defined Contours
+        if(this.beamsAndDefinedContourSelected()) {
+
+            // Get select transponders from dropdown, the value are transponder Ids
+            let selectedTransponderIds = $('#hts-beam-picker').val();
+
+            // Get the selected defined contours from checkboxes
+            let selectedDefinedContours = this.selectedDefinedContours();
+            console.log(JSON.stringify(selectedTransponderIds));
+            console.log(JSON.stringify(selectedDefinedContours));
+
+            // User does not select any beam
+            if (selectedTransponderIds.length == 0) {
+                Bert.alert('Please select at least 1 beam', 'danger', 'fixed-top');
+                return false;
+            }
+
+            // User does not select any defined contours
+            if (selectedDefinedContours.length == 0) {
+                Bert.alert('Please select as least 1 defined contour', 'danger', 'fixed-top');
+                return false;
+            }
+
+            // Convert selected transponder and selected defined contours into contours object to send to the server
+            contours = convertBeamAndDefinedContoursToObject(selectedTransponderIds, selectedDefinedContours);
+        }
+
+        // Paste from Excel
+        if(this.pasteFromExcelSelected()) {
+
+
+
+            // Convert the textarea paste from excel input into contours
+            contours = convertContoursTableToObject(self.contours());
+        }
+
+        // Alert if contours object to send to database is undefined
+        if (!contours) {
             Bert.alert('Please put contours in the correct format', 'danger', 'fixed-top');
+            return false;
         }
 
-        else {
-            let options = {
-                satellite: satellite,
-                parameter: parameter,
-                valueType: valueType,
-                contours: contours,
-            };
-            Meteor.call('findContoursToPlot', options, (error, result) => {
-                if (error) {
-                    Bert.alert(error.reason, 'danger', 'fixed-top');
-                }
-                else {
-                    self.mapData({
-                        geojsonData: result.resultContour,
-                        beamLabels: result.beamLabels,
-                    });
-                    self.applyFormatting();
-                    self.renderMap();
-                    if(result.notFoundMessages && result.notFoundMessages.length > 0) {
-                        self.logMessages(result.notFoundMessages);
-                        // Construct the message
-                        let listMessages = result.notFoundMessages.map((msg) => {
-                            return `<li>${msg}</li>`;
-                        })
-                        Bert.alert(`<ul>${listMessages.join('')}</ul>`, 'danger', 'fixed-top');
+        let options = {
+            satellite: satellite,
+            parameter: parameter,
+            valueType: valueType,
+            contours: contours,
+        };
 
-                    } else {
-                        self.logMessages([]);
+        // Request the server to give plots from our request with contour objects
+        Meteor.call('findContoursToPlot', options, (error, result) => {
+            if (error) {
+                Bert.alert(error.reason, 'danger', 'fixed-top');
+            }
+            else {
+                self.mapData({
+                    geojsonData: result.resultContour,
+                    beamLabels: result.beamLabels,
+                });
+                self.applyFormatting();
+                self.renderMap();
+                if(result.notFoundMessages && result.notFoundMessages.length > 0) {
+                    self.logMessages(result.notFoundMessages);
+                    // Construct the message
+                    let listMessages = result.notFoundMessages.map((msg) => {
+                        return `<li>${msg}</li>`;
+                    })
+                    Bert.alert(`<ul>${listMessages.join('')}</ul>`, 'danger', 'fixed-top');
+
+                } else {
+                    self.logMessages([]);
+                }
+            }
+        });
+
+
+        function convertBeamAndDefinedContoursToObject(transponderIds, definedContours) {
+            // Example of contour object { name: '101', path: 'forward', value: -4.5 }
+            let resultContours = [];
+
+            // Loop through each given transponder ID and defined contours
+            transponderIds.forEach((tpId) => {
+                for (let i = 0; i < definedContours.length; i++) {
+                    let transponder = Transponders.findOne({_id: tpId });
+
+                    // Find the value of defined contours from the 'definedContours' property of transponder
+                    // Example object: "definedContours": [{ location: "50%", value: -2.5 }, { location: "eoc", value: -4.5 }]
+                    let location = definedContours[i] == 'eoc-2' ? 'eoc' : definedContours[i];
+                    let definedContour = _.findWhere(transponder.definedContours, { location: location });
+
+                    // if defined contour is found, push it to the contours object array, otherwise, do nothing.
+                    // There is some case where the defined contours is not found, such as 50% on shape beam
+                    if (definedContour) {
+                        console.log(JSON.stringify({
+                            name: transponder.name,
+                            path: transponder.path,
+                            value: definedContours[i] == 'eoc-2' ? definedContour.value -2 : definedContour.value,
+                        }));
+                        resultContours.push({
+                            name: transponder.name,
+                            path: transponder.path,
+                            value: definedContours[i] == 'eoc-2' ? definedContour.value -2 : definedContour.value,
+                        });
                     }
                 }
             });
-
+            return resultContours;
         }
 
         function convertContoursTableToObject(contours) {
 
+            // If string contains only whitespaces, return false
+            // http://stackoverflow.com/questions/10261986/detect-string-which-contain-only-spaces
+            /*
+            if (!contours.replace(/\s/g, '').length) {
+                // string only contained whitespace (ie. spaces, tabs or line breaks)
+                return false;
+            }
+            */
+
             let rows = contours.split('\n');
             let formattedContours = [];
 
-            // Remove the last row if it is blank. This happens when paste from excel and the cursor enter a new line
-            if (rows[rows.length-1].length == 0) {
-                rows.pop();
-            }
             rows.forEach((row) => {
+
                 let columns = row.split('\t');
 
                 if (columns.length < 2 || columns.length > 3) {
@@ -136,6 +269,10 @@ Template.contours.viewmodel({
                 }
                 formattedContours.push(contourLine);
             });
+
+            if(formattedContours.length == 0) {
+                return false;
+            }
             return formattedContours;
         }
     },
