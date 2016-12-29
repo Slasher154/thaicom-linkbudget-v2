@@ -6,6 +6,7 @@ import { mapColors } from '/imports/api/maps/maps.js';
 import { Satellites } from '/imports/api/satellites/satellites';
 import { Transponders } from '/imports/api/transponders/transponders';
 import { Contours } from '/imports/api/contours/contours';
+import { htsTransponderSorter } from '/imports/api/utils/sort-functions';
 
 
 Template.contours.viewmodel({
@@ -78,7 +79,7 @@ Template.contours.viewmodel({
                 countries: {
                     $in: [this.selectedCountry()]
                 }
-            }).fetch();
+            }).fetch().sort(htsTransponderSorter);
             let options =  transponders.map((tp) => {
                 return `<option value="${tp._id}">${tp.name}-${tp.path}</option>`;
             });

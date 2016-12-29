@@ -8,7 +8,6 @@ import { Contours } from '/imports/api/contours/contours';
 import { beamPeaks } from '/imports/api/transponders/beam-peak';
 import { gxtConverter } from '/imports/api/gxt-converter/gxt-converter.js';
 
-
 Template.uploadGxt.viewmodel({
     onCreated(){
         Meteor.subscribe('allThaicomSatellites');
@@ -24,7 +23,7 @@ Template.uploadGxt.viewmodel({
     transponders() {
         return Transponders.find({
             satellite: this.selectedSatellite()
-        }).fetch().map((tp) => {
+        }).fetch().sort().map((tp) => {
             return {
                 id: tp._id,
                 name: `${tp.name} (${tp.path})`

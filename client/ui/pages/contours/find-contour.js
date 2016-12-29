@@ -5,6 +5,7 @@
 //import '/imports/api/utils/maplabel-compiled';
 import { Satellites } from '/imports/api/satellites/satellites';
 import { Transponders } from '/imports/api/transponders/transponders';
+import { htsTransponderSorter } from '/imports/api/utils/sort-functions';
 
 
 Template.findContours.viewmodel({
@@ -40,14 +41,16 @@ Template.findContours.viewmodel({
         $transponderPicker.find($('option')).remove();
         if (this.selectedSatellite()) {
             let attributeToShow = '';
+            let transponders = Transponders.find({
+                satellite: this.selectedSatellite(),
+            }).fetch();
             if (this.isConventional()) {
                 attributeToShow = 'beam';
             } else {
                 attributeToShow = 'path';
+                transponders = transponders.sort(htsTransponderSorter);
             }
-            let transponders = Transponders.find({
-                satellite: this.selectedSatellite(),
-            }).fetch();
+
             let options =  transponders.map((tp) => {
                 return `<option value="${tp._id}">${tp.name} (${tp[attributeToShow]})</option>`;
             });
