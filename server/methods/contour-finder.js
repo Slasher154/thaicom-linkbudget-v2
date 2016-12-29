@@ -330,7 +330,7 @@ Meteor.methods({
                     console.log('Best contour is at ' + bestContour.properties[queryValue] + ' ' + unitText);
 
                     // Add color property to the line
-                    bestContour.properties.color = mapColors[index];
+                    bestContour.properties.color = mapColors[index % mapColors.length];
 
                     // Push data into result polygon array
                     resultFeatureCollection.features.push(bestContour);

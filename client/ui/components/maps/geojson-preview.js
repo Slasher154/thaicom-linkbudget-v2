@@ -41,7 +41,9 @@ Template.geojsonPreview.viewmodel({
             if (self.showLocationLabel()) drawLocationLabel(thisMap);
 
             // Draw contour line on this map
-            if (self.showContourValue()) drawContourValue(thisMap);
+            if (self.showContourValue()) {
+                drawContourValue(thisMap, self.contourValueFontSize());
+            };
 
             // Draw beam label on this map
             if (self.showBeamLabel() && data.beamLabels) {
@@ -76,6 +78,7 @@ Template.geojsonPreview.viewmodel({
     beamLabels: [],
     showLocationLabel: true,
     showContourValue: true,
+    contourValueFontSize: 12,
     mapCenterCoordinates: {},
     mapFeatures: [],
     mapHeight: '500px',
@@ -158,8 +161,48 @@ function drawBeamLabel(map, labels) {
 
 }
 
-function drawContourValue(map) {
+function drawContourValue(map, fontSize) {
+    // Loop each polygon (contour) to draw the label
+    import { TxtOverlay } from '/imports/api/maps/txtOverlay';
+    let contourValueLabels = [];
+    map.data.forEach((feature) => {
+        let geometry = feature.getGeometry();
+        if(geometry.getType() === 'Polygon') {
+            let contourValue = 0;
+            let possibleAttributes = ['relativeGain', 'eirp', 'gt'];
+            // The feature must have property either 'relativeGain', 'eirp' or 'gt'
+            possibleAttributes.forEach((a) => {
+                let value = feature.getProperty(a);
+                if (value) {
+                    contourValue = value;
+                }
+            });
+            //console.log('Contour value = ' + contourValue);
+            geometry.getArray().forEach((path) => {
+                //Iterate over the points in the path to find the rightmost point (highest longitude)
+                /*
+                let rightmost = {
+                    lat: -100,
+                    lng: -200
+                };
+                path.getArray().forEach(function(latLng){
+                    if (latLng.lng() > rightmost.lng) {
+                        rightmost = latLng;
+                    }
+                });
+                 */
+                let rightmost = _.max(path.getArray(), (latLng) => {
+                    return latLng.lng();
+                });
 
+                //console.log('rightmost is ' + JSON.stringify(rightmost));
+                let customTxt = `<div style="font-size: ${fontSize + 'px'}">${contourValue}</div>`;
+                contourValueLabels.push(new TxtOverlay(rightmost, customTxt, "contourValueLabel", map));
+
+            })
+
+        }
+    });
 }
 
 function setStyle(map) {

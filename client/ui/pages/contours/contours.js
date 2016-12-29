@@ -362,18 +362,29 @@ Template.contours.viewmodel({
         return 'Show Beam Label';
     },
     toggleLabel(event) {
-      this.showLabel(!this.showLabel());
-      event.preventDefault();
-      this.applyFormatting();
-      this.renderMap();
+        event.preventDefault();
+        this.showLabel(!this.showLabel());
+        this.applyFormatting();
+        this.renderMap();
+    },
+    showContourValue: true,
+    toggleContourValueText() {
+        if(this.showContourValue()){
+            return 'Hide Contour Value';
+        }
+        return 'Show Contour Value';
+    },
+    toggleContourValue(event) {
+        event.preventDefault();
+        this.showContourValue(!this.showContourValue());
+        this.applyFormatting();
+        this.renderMap();
     },
     labelFontSize: 12,
     increaseLabelFontSize(event) {
         event.preventDefault();
         let currentLabelFontSize = this.labelFontSize();
-        console.log('Current = ' + currentLabelFontSize);
         this.labelFontSize(currentLabelFontSize + 2);
-        console.log('New = ' + this.labelFontSize());
         this.applyFormatting();
         this.renderMap();
     },
@@ -382,6 +393,23 @@ Template.contours.viewmodel({
         let currentLabelFontSize = this.labelFontSize();
         if (currentLabelFontSize >= 1) {
             this.labelFontSize(currentLabelFontSize - 2);
+        }
+        this.applyFormatting();
+        this.renderMap();
+    },
+    contourValueFontSize: 12,
+    increaseContourValueFontSize(event) {
+        event.preventDefault();
+        let currentLabelFontSize = this.contourValueFontSize();
+        this.contourValueFontSize(currentLabelFontSize + 2);
+        this.applyFormatting();
+        this.renderMap();
+    },
+    decreaseContourValueFontSize(event) {
+        event.preventDefault();
+        let currentLabelFontSize = this.contourValueFontSize();
+        if (currentLabelFontSize >= 1) {
+            this.contourValueFontSize(currentLabelFontSize - 2);
         }
         this.applyFormatting();
         this.renderMap();
@@ -464,7 +492,7 @@ Template.contours.viewmodel({
                     // Select the color based on the index of category. For example, if there is category "A" and "B",
                     // Contours in category "A" will get the first color in the mapColors array and all lines in category "B"
                     // will get the 2nd color in the array.
-                    feature.properties.color = colorChoices[distinctCategories.indexOf(category)].color;
+                    feature.properties.color = colorChoices[distinctCategories.indexOf(category) % colorChoices.length].color;
                 }
             }
         });
@@ -485,6 +513,8 @@ Template.contours.viewmodel({
         Blaze.renderWithData(Template.geojsonPreview, {
             mapData: this.mapData(),
             mapHeight: this.mapHeight(),
+            showContourValue: this.showContourValue(),
+            contourValueFontSize: this.contourValueFontSize(),
         } , $('.map-container')[0]);
     }
 });
