@@ -31,7 +31,7 @@
                     <form id="selector">
                         <div class="form-group">
                             <label for="satellite-picker">Satellite</label>
-                            <select class="form-control" {{b "options: satellites, optionsValue: id, optionsText: name, value: selectedSatellite, defaultText: 'Select a satellite', defaultValue: ''"}}>
+                            <select class="form-control" {{b "options: satellites, optionsValue: id, optionsText: name, value: selectedSatellite, defaultText: 'Select a satellite', defaultValue: '', change: satelliteChanged"}}>
                             </select>
                         </div>
 
@@ -44,6 +44,7 @@
                                 <input type="radio" name="valueToDisplay" {{b "group: selectedValueToDisplay"}} value="gt"> G/T
                             </label></div>
                         </div>
+                        <!--
                         <div class="form-group">
                             <label class="control-label">Input Value Type</label>
                             <div class="radio">
@@ -57,13 +58,19 @@
                                 </label>
                             </div>
                         </div>
-                        <input {{b "check: findSpecificTransponder"}} type="checkbox"> <label>Find contour on specific transponder</label>
-                        <p class="help-block">By default, the program returns the best beam only.</p>
+                        -->
+                        <input {{b "check: findSpecificTransponder, disable: forceSpecificTransponder"}} type="checkbox"> <label>Find contour on specific transponder</label>
+                        <p class="help-block">If not checked, program will return all beams that covered given locations</p>
                         <br>
                         <!-- Transponder Selector -->
                         <div class="form-group" {{b "visible: findSpecificTransponder"}}>
+
                             <label for="transponder-picker">Transponder</label>
+                            <!--
                             <select class="form-control" {{b "options: transponders, optionsValue: id, optionsText: name, value: selectedTransponder, defaultText: 'Select a transponder', defaultValue: ''"}}>
+                            -->
+                            <select id="transponder-picker" class="form-control" multiple>
+
                             </select>
                         </div>
 

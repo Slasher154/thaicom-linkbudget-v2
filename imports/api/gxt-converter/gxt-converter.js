@@ -2,6 +2,8 @@
  * Created by thana on 10/5/2016.
  */
 
+// Return a promise containing array of transponders for data in gxt file
+
 export const gxtConverter = (gxtFile, convertOptions) => {
     if (gxtFile) {
         return new Promise((resolve, reject) => {
@@ -20,9 +22,12 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                     reject('There is no contour inside this file.')
                 } else {
 
-                    let previousRelativeGain = 0;
+                    let previousValue = 0;
                     let features = [];
                     let feature = {};
+
+                    // Get the value type from convert options
+                    let valueType = convertOptions.valueType;
 
                     // Omit the first array element because it is not contour data (start at index 1 not 0)
                     for (var i = 1; i < contours.length; i++) {
@@ -39,24 +44,24 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                         //console.log('Gain Text = ' + gainText);
 
                         // Extract the number behind gain=xx.xx and convert to float
-                        let gainValue = ReadGainValue(gainText);
-                        //console.log('Gain = ' + relativeGain);
+                        let currentValue = ReadGainValue(gainText);
+                        //console.log(valueType + ' = ' + currentValue);
 
-                        let relativeGain = 0;
 
                         // If the options say this is absolute value, convert it into relative
-                        relativeGain = convertOptions.isAbsoluteValue ? convertOptions.peakValue - gainValue : gainValue;
+                        // relativeGain = convertOptions.isAbsoluteValue ? convertOptions.peakValue - gainValue : gainValue;
 
                         // Remove the contour data section to leave only lon;lat texts and convert into array of lon,lat
                         // The return value will be the same as coordinates property of Geojson polygon object
                         let polygon = ConvertCoordinatesTextLinesToPolygon(contourData.splice(1));
                         //console.log('Polygon = ' + polygon);
 
-                        // if the relative gain of this contour line is higher than the previous one,
+                        // if the value of this contour line is higher than the previous one,
                         // this contour line is belonging to the next transponder (gain value of subsequent
                         // contour lines are always lower than the previous line except it is data of the next
                         // transponder that reset the contour line sequences by starting from closest to peak again)
-                        if (relativeGain > previousRelativeGain) {
+                        // Except if this is first contour line (no previous value to compare)
+                        if (currentValue > previousValue && i > 1) {
 
                             //console.log('This contour is for the next transponder.');
 
@@ -69,12 +74,12 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                             features = [];
 
                             // Create the first feature for this line                            )
-                            feature = InitializeFeature(relativeGain, polygon);
+                            feature = InitializeFeature(polygon, valueType, currentValue);
                         }
 
                         // if the relative gain of this contour line is equal to the previous one,
                         // it is another polygon of the same contour line
-                        else if (relativeGain === previousRelativeGain) {
+                        else if (currentValue === previousValue) {
                             //console.log('This contour has the same relative gain as previous one');
                             feature.geometry.coordinates.push(polygon);
                             //console.log('The new feature is ' + feature);
@@ -86,10 +91,10 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                         else {
                             // Push the current feature except if this contour is the first line
                             if (i!=1) {
-                                //console.log('Push contour ' + previousRelativeGain + ' into the features array');
+                                //console.log('Push contour ' + previousValue + ' into the features array');
                                 features.push(Object.assign({}, feature));
                             }
-                            feature = InitializeFeature(relativeGain, polygon);
+                            feature = InitializeFeature(polygon, valueType, currentValue);
                         }
 
                         // If this contour line is the last one, create a FeatureCollection with features and push to
@@ -103,7 +108,7 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                             transponders.push(CreateFeatureCollection(features.splice(0)));
                         }
 
-                        previousRelativeGain = relativeGain;
+                        previousValue = currentValue;
 
                     }
 
@@ -144,6 +149,7 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                     return polygon;
                 }
 
+                /*
                 function InitializeFeature(relativeGain, polygon) {
                     return {
                         type: "Feature",
@@ -155,6 +161,21 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                             coordinates: [polygon],
                         },
                     };
+                }
+                */
+
+                // Value type is either 'relativeGain (for HTS), eirp (conventional) or gt (conventional)
+                function InitializeFeature(polygon, valueType, value) {
+                    let feature = {
+                        type: "Feature",
+                        properties: {},
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: [polygon]
+                        }
+                    }
+                    feature.properties[valueType] = value;
+                    return feature;
                 }
 
                 function CreateFeatureCollection(features) {

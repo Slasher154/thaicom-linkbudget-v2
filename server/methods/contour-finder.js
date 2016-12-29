@@ -2,6 +2,7 @@
  * Created by thana on 11/30/2016.
  */
 
+import { Satellites } from '/imports/api/satellites/satellites';
 import { Contours, TempContours } from '/imports/api/contours/contours';
 import { mapColors } from '/imports/api/maps/maps.js';
 
@@ -12,7 +13,6 @@ Meteor.methods({
         check(options.contours, [Object]);
         check(options.satellite, String); // "Thaicom 4", "Thaicom 5", "Thaicom 6", etc.
         check(options.parameter, String); // "eirp" or "gt"
-        check(options.valueType, String); // "absolute" or "relative"
 
         let resultContour = {
             "type": "FeatureCollection",
@@ -22,13 +22,22 @@ Meteor.methods({
         let notFoundMessages = [];
         let beamLabels = []; // Text and coordinates of beam peak to show labels on the map
 
-        // Sort array of contours by field name then value, name descending and value ascending (beam peak first)
+        // Sort array of contours by field name then value, name ascending and value descending (beam peak first)
         options.contours.sort(function (a, b) {
             return a.name - b.name || b.value - a.value;
         });
 
         let currentContourName = '';
         let contourNameCount = 1;
+
+        // Get value type to query from satellite type (HTS = relativeGain, Conventional = either EIRP or G/T)
+        let satelliteType = Satellites.findOne({name: options.satellite }).type;
+        let queryValue = '';
+        if (satelliteType.toLowerCase() === 'hts') {
+            queryValue = 'relativeGain';
+        } else {
+            queryValue = options.parameter;
+        }
 
         // Loop input contours
         options.contours.forEach((contour) => {
@@ -46,6 +55,22 @@ Meteor.methods({
             // The value query must use the range query instead of exact match to avoid the decimal precision problem
             // i.e. the input and value store in database is not the same double in terms of how mongodb treat the double
             // http://stackoverflow.com/questions/32798386/mongodb-how-to-get-n-decimals-precision-in-a-query
+            let elemMatchQuery = {};
+            // Put the plus sign in front of contour.value to prevent some weird case where contour.value turns into String
+            elemMatchQuery['properties' + '.' + queryValue] = {
+                $gte: +contour.value - 0.05,
+                $lt: +contour.value + 0.05,
+            };
+            console.log(JSON.stringify(elemMatchQuery));
+            let projectionQuery = {
+                fields: {
+                    properties: 1,
+                    features: {
+                        $elemMatch: elemMatchQuery,
+                    }
+                }
+            };
+            /*
             let projectionQuery = {
                 fields: {
                     properties: 1,
@@ -59,6 +84,7 @@ Meteor.methods({
                     }
                 }
             };
+            */
             //console.log('Search query is ' + JSON.stringify(searchQuery));
             //console.log('---------------');
             //console.log('Projection query is ' + JSON.stringify(projectionQuery));
@@ -119,7 +145,8 @@ Meteor.methods({
         check(options.coordinates, [Object]);
         check(options.satellite, String); // "Thaicom 4", "Thaicom 5", "Thaicom 6", etc.
         check(options.parameter, String); // "eirp" or "gt"
-        check(options.valueType, String); // "absolute" or "relative"
+        //check(options.path, String);
+        //check(options.names, [String]);
 
         let resultFeatureCollection = {
             "type": "FeatureCollection",
@@ -148,11 +175,24 @@ Meteor.methods({
                 "properties.parameter": options.parameter,
             };
 
+            // Get value type to query from satellite type (HTS = relativeGain, Conventional = either EIRP or G/T)
+            let satelliteType = Satellites.findOne({name: options.satellite }).type;
+            let queryValue = '';
+            let unitText = '';
+            if (satelliteType.toLowerCase() === 'hts') {
+                queryValue = 'relativeGain';
+                unitText = 'dB';
+            } else {
+                queryValue = options.parameter;
+                unitText = queryValue.toLowerCase() === 'eirp' ? 'dBW' : 'G/T dB/K';
+            }
+
+
             // If the options include name and path (user specifies transponder, include it in the query)
-            if (options.name && options.path) {
-                console.log('User specifies transponder as name = ' + options.name + ' and path = ' + options.path);
+            if (options.names && options.path) {
+                console.log('User specifies transponder as names = ' + options.names.join(',') + ' and path = ' + options.path);
                 _.extend(propertiesQuery, {
-                    "properties.name": options.name,
+                    "properties.name": { $in: options.names },
                     "properties.path": options.path
                 })
             }
@@ -197,45 +237,52 @@ Meteor.methods({
                 let noCoverageMessage = {
                     latitude: coordinate.latitude,
                     longitude: coordinate.longitude,
-                    bestBeam: options.name ? options.name : 'N/A',
+                    bestBeam: 'N/A',
                     value: 'No coverage',
                 };
 
                 // Add the widest contour in the database of that transponder to show why it is not covered if user specifies the transponder
-                if (options.name && options.path) {
+                if (options.names && options.path) {
                     console.log(JSON.stringify(propertiesQuery));
-                    let featureCollection = Contours.findOne({
-                        "properties.name": options.name,
-                        "properties.path": options.path,
-                        "properties.satellite": options.satellite,
-                        "properties.parameter": options.parameter,
-                    });
-                    if (featureCollection) {
-
-                        let lowestContourFeature = _.min(featureCollection.features, (feature) => {
-                            return feature.properties.relativeGain;
+                    options.names.forEach((transponderName) => {
+                        let featureCollection = Contours.findOne({
+                            "properties.name": transponderName,
+                            "properties.path": options.path,
+                            "properties.satellite": options.satellite,
+                            "properties.parameter": options.parameter,
                         });
-                        resultFeatureCollection.features.push(lowestContourFeature);
+                        if (featureCollection) {
 
-                        // Add the contour value at the end of no coverage message to let user knows that the coverage shown is at which dB
-                        noCoverageMessage.value = noCoverageMessage.value + ' within ' + lowestContourFeature.properties.relativeGain + ' dB';
-
-                        // Push the beam labels
-                        // Add beam peak to beam labels array
-                        if (!_.findWhere(beamLabels, { text: featureCollection.properties.name })) {
-                            beamLabels.push({
-                                text: featureCollection.properties.name,
-                                latitude: featureCollection.properties.peakLatitude,
-                                longitude: featureCollection.properties.peakLongitude,
-                                fontSize: 12,
-                                visible: true,
+                            let lowestContourFeature = _.min(featureCollection.features, (feature) => {
+                                return feature.properties[queryValue];
                             });
-                        }
+                            resultFeatureCollection.features.push(lowestContourFeature);
 
-                    }
+                            // Add the contour value at the end of no coverage message to let user knows that the coverage shown is at which dB
+                            noCoverageMessage.bestBeam = featureCollection.properties.name;
+                            noCoverageMessage.value = 'No coverage within ' + noCoverageMessage.value + ' within ' + lowestContourFeature.properties[queryValue] + ' ' + unitText;
+
+                            // Push the beam labels
+                            // Add beam peak to beam labels array
+                            if (!_.findWhere(beamLabels, { text: featureCollection.properties.name })) {
+                                beamLabels.push({
+                                    text: featureCollection.properties.name,
+                                    latitude: featureCollection.properties.peakLatitude,
+                                    longitude: featureCollection.properties.peakLongitude,
+                                    fontSize: 12,
+                                    visible: true,
+                                });
+                            }
+                        }
+                        // Push the message as a result to show in the table
+                        resultContours.push(noCoverageMessage);
+                    })
+
                 }
 
-                resultContours.push(noCoverageMessage);
+                else {
+                    resultContours.push(noCoverageMessage);
+                }
             }
 
             else {
@@ -278,9 +325,9 @@ Meteor.methods({
 
                     // Get the element which has the lowest relative gain value = best contour
                     let bestContour = _.max(filteredContour, (contour) => {
-                        return contour.properties.relativeGain;
+                        return contour.properties[queryValue];
                     });
-                    console.log('Best contour is at ' + bestContour.properties.relativeGain + ' dB');
+                    console.log('Best contour is at ' + bestContour.properties[queryValue] + ' ' + unitText);
 
                     // Add color property to the line
                     bestContour.properties.color = mapColors[index];
@@ -289,12 +336,12 @@ Meteor.methods({
                     resultFeatureCollection.features.push(bestContour);
 
                     // Push data to result table
-                    console.log('Best contour of ' + coordinate.longitude + ',' + coordinate.latitude + ' is beam ' + bestContour.properties.name + ' at ' + bestContour.properties.relativeGain + ' dB');
+                    console.log('Best contour of ' + coordinate.longitude + ',' + coordinate.latitude + ' is beam ' + bestContour.properties.name + ' at ' + bestContour.properties[queryValue] + ' ' + unitText);
                     resultContours.push({
                         latitude: coordinate.latitude,
                         longitude: coordinate.longitude,
                         bestBeam: bestContour.properties.name,
-                        value: bestContour.properties.relativeGain,
+                        value: bestContour.properties[queryValue],
                     });
 
                     // Push the beam labels

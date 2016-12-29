@@ -5,12 +5,14 @@
 import { mapColors } from '/imports/api/maps/maps.js';
 import { Satellites } from '/imports/api/satellites/satellites';
 import { Transponders } from '/imports/api/transponders/transponders';
+import { Contours } from '/imports/api/contours/contours';
 
 
 Template.contours.viewmodel({
     onCreated(){
         Meteor.subscribe('allThaicomSatellites');
         Meteor.subscribe('transpondersWithDefinedContours');
+        Meteor.subscribe('allContoursWithBasicInfo');
     },
     onRendered(){
         $('.select-picker').selectpicker();
@@ -25,7 +27,11 @@ Template.contours.viewmodel({
     },
     selectedSatellite: '',
     selectedValueToDisplay: '',
-    selectedValueType: '',
+    displayValueText() {
+      if(this.selectedValueToDisplay().toLowerCase() === 'eirp') return 'EIRP';
+        if(this.selectedValueToDisplay().toLowerCase() === 'gt') return 'G/T';
+        return '';
+    },
     selectedInputMethod: '',
     isConventional() {
       if (this.selectedSatellite()) {
@@ -40,7 +46,7 @@ Template.contours.viewmodel({
         return false;
     },
     checkSatelliteType(name, typeToCheck) {
-        return Satellites.findOne({name: name}).type === typeToCheck;
+        return Satellites.findOne({name: name}).type.toLowerCase() === typeToCheck.toLowerCase();
     },
     beamsAndDefinedContourSelected: false,
     pasteFromExcelSelected: false,
@@ -80,6 +86,50 @@ Template.contours.viewmodel({
         }
     },
     selectedDefinedContours: [],
+    singleTransponderSelected: false,
+    conventionalTransponders() {
+      if(this.selectedSatellite()){
+          return Transponders.find({
+              satellite: this.selectedSatellite()
+          }).fetch().map((tp) => {
+              return {
+                  id: tp._id,
+                  name: `${tp.name} (${tp.beam})`
+              };
+          });
+      }
+      return [];
+    },
+    selectedConventionalTransponder: '',
+    conventionalTransponderChanged(event) {
+        let $valuePicker = $('#conventional-value-picker');
+        $valuePicker.find($('option')).remove();
+        if (this.singleTransponderSelected()) {
+            let transponder = Transponders.findOne({
+                _id: this.selectedConventionalTransponder(),
+            });
+            // Get the range of EIRP or G/T to select from the minimumContour and maximumContour properties
+            let contour = Contours.findOne({
+                'properties.name': transponder.name,
+                'properties.path': transponder.path,
+                'properties.parameter': this.selectedValueToDisplay()
+            });
+            let values = [];
+            if (contour) {
+                // Generate the array from highest value to lowest value
+                let step = 0.5;
+                values = _.range(contour.properties.minimumContour, contour.properties.maximumContour + step, step).reverse();
+            }
+            else {
+                Bert.alert(`Cannot determine the range of ${this.selectedValueToDisplay()} of this transponder to select from`, 'danger', 'fixed-top');
+            }
+            let unit = this.selectedValueToDisplay().toLowerCase() === 'eirp' ? 'dBW' : 'dB/K';
+            let options =  values.map((value) => {
+                return `<option value="${value}">${value} ${unit}</option>`;
+            });
+            $valuePicker.append(options).selectpicker('refresh');
+        }
+    },
     contours: '',
     contourColors: [],
     contourSubmitted(event) {
@@ -88,7 +138,6 @@ Template.contours.viewmodel({
         let self = this;
         let satellite = self.selectedSatellite();
         let parameter = self.selectedValueToDisplay();
-        let valueType = self.selectedValueType();
         let contours = [];
 
         if (!satellite) {
@@ -97,10 +146,6 @@ Template.contours.viewmodel({
         }
         if (!parameter) {
             Bert.alert('Please select either EIRP or G/T', 'danger', 'fixed-top');
-            return false;
-        }
-        if (!valueType) {
-            Bert.alert('Please select either absolute value or relative from peak value', 'danger', 'fixed-top');
             return false;
         }
 
@@ -112,8 +157,8 @@ Template.contours.viewmodel({
 
             // Get the selected defined contours from checkboxes
             let selectedDefinedContours = this.selectedDefinedContours();
-            console.log(JSON.stringify(selectedTransponderIds));
-            console.log(JSON.stringify(selectedDefinedContours));
+            //console.log(JSON.stringify(selectedTransponderIds));
+            //console.log(JSON.stringify(selectedDefinedContours));
 
             // User does not select any beam
             if (selectedTransponderIds.length == 0) {
@@ -140,6 +185,26 @@ Template.contours.viewmodel({
             contours = convertContoursTableToObject(self.contours());
         }
 
+        // Conventional + Select transponder and EIRP or G/T value from dropdown
+        if(this.singleTransponderSelected()) {
+            let transponder = Transponders.findOne({ _id: this.selectedConventionalTransponder() });
+            let selectedValues = $('#conventional-value-picker').val();
+            console.log(selectedValues);
+            if (selectedValues == null) {
+                Bert.alert('Please select at least 1 value', 'danger', 'fixed-top');
+                return false;
+            }
+            // Generate contours object from transponder name, path and value
+            contours = selectedValues.map((value) => {
+                return {
+                    name: transponder.name,
+                    path: transponder.path,
+                    value: value,
+                };
+            });
+            console.log(JSON.stringify(contours));
+        }
+
         // Alert if contours object to send to database is undefined
         if (!contours) {
             Bert.alert('Please put contours in the correct format', 'danger', 'fixed-top');
@@ -149,7 +214,6 @@ Template.contours.viewmodel({
         let options = {
             satellite: satellite,
             parameter: parameter,
-            valueType: valueType,
             contours: contours,
         };
 
@@ -291,9 +355,17 @@ Template.contours.viewmodel({
     },
     mapHeight: '700px',
     showLabel: true,
-    showLabelChanged() {
-        this.applyFormatting();
-        this.renderMap();
+    toggleLabelText() {
+        if(this.showLabel()){
+            return 'Hide Beam Label';
+        }
+        return 'Show Beam Label';
+    },
+    toggleLabel(event) {
+      this.showLabel(!this.showLabel());
+      event.preventDefault();
+      this.applyFormatting();
+      this.renderMap();
     },
     labelFontSize: 12,
     increaseLabelFontSize(event) {

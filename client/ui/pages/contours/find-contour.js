@@ -3,11 +3,13 @@
  */
 
 //import '/imports/api/utils/maplabel-compiled';
+import { Satellites } from '/imports/api/satellites/satellites';
 import { Transponders } from '/imports/api/transponders/transponders';
 
 
 Template.findContours.viewmodel({
     onCreated(){
+        Meteor.subscribe('allThaicomSatellites');
         Meteor.subscribe('allTranspondersWithBasicInfo');
     },
     mapData: {
@@ -24,28 +26,77 @@ Template.findContours.viewmodel({
         },
     },
     mapHeight: '700px',
-    satellites: [
-        { id: 'Thaicom 4', name: 'Thaicom 4' },
-        { id: 'Thaicom 5', name: 'Thaicom 5' },
-        { id: 'Thaicom 6', name: 'Thaicom 6' },
-    ],
-    selectedSatellite: '',
-    selectedValueToDisplay: '',
-    selectedValueType: '',
-    coordinates: '',
-    findSpecificTransponder: false,
-    transponders() {
-        return Transponders.find({
-            satellite: this.selectedSatellite()
-        }).fetch().map((tp) => {
+    satellites() {
+        return Satellites.find().fetch().map((satellite) => {
             return {
-                id: tp._id,
-                name: `${tp.name} (${tp.path})`
+                id: satellite.name,
+                name: satellite.name,
             };
         });
     },
+    satelliteChanged(event){
+        //$('.select-picker').selectpicker();
+        let $transponderPicker = $('#transponder-picker');
+        $transponderPicker.find($('option')).remove();
+        if (this.selectedSatellite()) {
+            let attributeToShow = '';
+            if (this.isConventional()) {
+                attributeToShow = 'beam';
+            } else {
+                attributeToShow = 'path';
+            }
+            let transponders = Transponders.find({
+                satellite: this.selectedSatellite(),
+            }).fetch();
+            let options =  transponders.map((tp) => {
+                return `<option value="${tp._id}">${tp.name} (${tp[attributeToShow]})</option>`;
+            });
+            $transponderPicker.append(options).selectpicker('refresh');
+        }
+    },
+    selectedSatellite: '',
+    selectedValueToDisplay: '',
+    coordinates: '',
+    isConventional() {
+        if (this.selectedSatellite()) {
+            let satelliteType = Satellites.findOne({name: this.selectedSatellite()}).type;
+            return satelliteType.toLowerCase() === 'Conventional'.toLowerCase()
+        }
+        return false;
+    },
+    forceSpecificTransponder() {
+        return this.isConventional();
+    },
+    findSpecificTransponder: true,
+    transponders() {
+        if (this.selectedSatellite()) {
+            let attributeToShow = '';
+            if (this.isConventional()) {
+                attributeToShow = 'beam';
+            } else {
+                attributeToShow = 'path';
+            }
+            return Transponders.find({
+                satellite: this.selectedSatellite()
+            }).fetch().map((tp) => {
+                return {
+                    id: tp._id,
+                    name: `${tp.name} (${tp[attributeToShow]})`
+                };
+            });
+        }
+        return [];
+
+    },
     selectedTransponder: '',
-    valueText: 'Relative Contour (dB)',
+    valueText() {
+        if (this.isConventional()) {
+            let value = this.selectedValueToDisplay();
+            if (value.toLowerCase() === 'eirp') return 'EIRP (dBW)';
+            else return 'G/T (dB/K)';
+        }
+        return 'Relative Contour (dB)';
+    },
     resultShown: false,
     coordsSubmitted(event) {
         event.preventDefault();
@@ -54,73 +105,89 @@ Template.findContours.viewmodel({
 
         let satellite = self.selectedSatellite();
         let parameter = self.selectedValueToDisplay();
-        let valueType = self.selectedValueType();
         let coords = convertCoordsTableToObject(self.coordinates());
+
+
 
         if (!satellite) {
             Bert.alert('Please select a satellite', 'danger', 'fixed-top');
+            return false;
         }
-        else if (!parameter) {
+        if (!parameter) {
             Bert.alert('Please select either EIRP or G/T', 'danger', 'fixed-top');
+            return false;
         }
-        else if (!valueType) {
-            Bert.alert('Please select either absolute value or relative from peak value', 'danger', 'fixed-top');
-        }
-        else if (!coords) {
+
+        if (!coords) {
             Bert.alert('Please put coordinates in the correct format', 'danger', 'fixed-top');
+            return false;
         }
 
-        else {
-            let options = {
-                satellite: satellite,
-                parameter: parameter,
-                valueType: valueType,
-                coordinates: coords,
-            };
+        let options = {
+            satellite: satellite,
+            parameter: parameter,
+            coordinates: coords,
+        };
 
-            // Check if user specifies the transponder
-            if (this.findSpecificTransponder()  && this.selectedTransponder()) {
-                let transponder = Transponders.findOne({ _id: this.selectedTransponder() });
-                options.name = transponder.name;
-                options.path = transponder.path;
+        let transponders = [];
+        if (self.findSpecificTransponder()) {
+            let transponderIds = $('#transponder-picker').val();
+            if (!transponders) {
+                Bert.alert('Please select at least 1 transponder', 'danger', 'fixed-top');
+                return false;
+            }
+            transponders = transponderIds.map((tpId) => {
+                return Transponders.findOne({ _id: tpId });
+            });
+            let names = _.uniq(_.pluck(transponders, 'name'));
+            let paths = _.uniq(_.pluck(transponders, 'path'));
+
+            // Find the forward and return beam at the same time is not allowed
+            if (paths > 1) {
+                Bert.alert('Cannot find the forward and return beam at the same time', 'danger', 'fixed-top');
+                return false;
+            } else {
+                options.names = names;
+                options.path = paths[0];
+            }
+        }
+
+        Meteor.call('findContoursValueFromCoordinates', options, (error, result) => {
+            if (error) {
+                Bert.alert(error.reason, 'danger', 'fixed-top');
+            }
+            else {
+                $('.map-container').empty();
+                //console.log(JSON.stringify(result));
+                Blaze.renderWithData(Template.geojsonPreview, {
+                    mapData: {
+                        geojsonData: result.resultPolygons,
+                        beamLabels: result.beamLabels,
+                    },
+                    mapHeight: self.mapHeight(),
+                }, $('.map-container')[0]);
+
+                let $tbody = $('#results').find('tbody').empty();
+
+                // Append results to table
+                let tableHtml = '';
+                result.resultContours.forEach((contour, index) => {
+                    tableHtml += '<tr>';
+                    tableHtml += `<td>${index+1}</td>`;
+                    tableHtml += `<td>${contour.latitude}</td>`;
+                    tableHtml += `<td>${contour.longitude}</td>`;
+                    tableHtml += `<td>${contour.bestBeam}</td>`;
+                    tableHtml += `<td>${contour.value}</td>`;
+                    tableHtml += '</tr>';
+                });
+                $tbody.append(tableHtml);
             }
 
-            Meteor.call('findContoursValueFromCoordinates', options, (error, result) => {
-                if (error) {
-                    Bert.alert(error.reason, 'danger', 'fixed-top');
-                }
-                else {
-                    $('.map-container').empty();
-                    //console.log(JSON.stringify(result));
-                    Blaze.renderWithData(Template.geojsonPreview, {
-                        mapData: {
-                            geojsonData: result.resultPolygons,
-                            beamLabels: result.beamLabels,
-                        },
-                        mapHeight: self.mapHeight(),
-                    }, $('.map-container')[0]);
+            $('.loading').text('');
+            self.resultShown(true);
+        });
 
-                    let $tbody = $('#results').find('tbody').empty();
 
-                    // Append results to table
-                    let tableHtml = '';
-                    result.resultContours.forEach((contour, index) => {
-                        tableHtml += '<tr>';
-                        tableHtml += `<td>${index+1}</td>`;
-                        tableHtml += `<td>${contour.latitude}</td>`;
-                        tableHtml += `<td>${contour.longitude}</td>`;
-                        tableHtml += `<td>${contour.bestBeam}</td>`;
-                        tableHtml += `<td>${contour.value}</td>`;
-                        tableHtml += '</tr>';
-                    });
-                    $tbody.append(tableHtml);
-                }
-                
-                $('.loading').text('');
-                self.resultShown(true);
-            });
-
-        }
 
         function convertCoordsTableToObject(coords) {
             console.log(coords);
