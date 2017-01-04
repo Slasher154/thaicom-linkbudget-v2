@@ -4,6 +4,7 @@
 import { geocode, mapColors, sampleGeojsonData } from '/imports/api/maps/maps.js';
 //import { TxtOverlay } from '/imports/api/maps/txtOverlay';
 import { readJsonFromAssetFiles } from '/imports/api/utils/readJson';
+import { Transponders } from '/imports/api/transponders/transponders';
 
 
 Template.geojsonPreview.viewmodel({
@@ -49,6 +50,77 @@ Template.geojsonPreview.viewmodel({
             if (self.showBeamLabel() && data.beamLabels) {
                 drawBeamLabel(thisMap, data.beamLabels);
             }
+
+            // Show EIRP or G/T on map click
+            let showValueOnMapClick = (e) => {
+                //console.log(JSON.stringify(e.latLng));
+                // Check if any satellite is selected via jquery
+                let satellite = $('#satellite-picker').val();
+                let valueToDisplay = $('input[name="valueToDisplay"]:checked').val();
+                let transponderId = $('#conventional-beam-picker').val();
+                //console.log('Satellite is ' + satellite);
+                //console.log('value to display is ' + valueToDisplay);
+                //console.log('transponder is ' + transponderId);
+                if (satellite && valueToDisplay && transponderId) {
+                    let transponder = Transponders.findOne({ _id: transponderId });
+                    // Construct option object
+                    let options = {
+                        satellite: satellite,
+                        parameter: valueToDisplay,
+                        path: transponder.path,
+                        names: [transponder.name],
+                        coordinates:[{
+                            latitude: e.latLng.lat(),
+                            longitude: e.latLng.lng(),
+                        }]
+                    };
+                    Meteor.call('findContoursValueFromCoordinates', options, (error, result) => {
+                        if (error) {
+                            Bert.alert(error.reason, 'danger', 'fixed-top');
+                        }
+                        else {
+                            // Create content string to put in Infowindow
+                            let contentString = '';
+                            result.resultContours.forEach((contour, index) => {
+                                contentString += '<div>';
+                                contentString += '<b>';
+                                contentString += 'Transponder';
+                                contentString += '</b>';
+                                contentString += `: ${contour.bestBeam} `;
+                                contentString += '</div>';
+                                contentString += '<div>';
+                                contentString += '<b>';
+                                contentString += 'Latitude';
+                                contentString += '</b>';
+                                contentString += `: ${contour.latitude} `;
+                                contentString += '</div>';
+                                contentString += '<div>';
+                                contentString += '<b>';
+                                contentString += 'Longitude';
+                                contentString += '</b>';
+                                contentString += `: ${contour.longitude} `;
+                                contentString += '</div>';
+                                contentString += '<br>';
+                                contentString += '<div>';
+                                contentString += '<b>';
+                                contentString += valueToDisplay == 'eirp' ? 'EIRP' : 'G/T';
+                                contentString += '</b>';
+                                contentString += ` = ${contour.value} `;
+                                contentString += valueToDisplay == 'eirp' ? 'dBW' : 'dB/K';
+                                contentString += '</div>';
+                            });
+                            //console.log(contentString);
+                            let infowindow = new google.maps.InfoWindow({
+                                position: e.latLng,
+                                content: contentString
+                            }).open(thisMap);
+                        }
+                    });
+                }
+            }
+
+            // Add listener to listen to mouse click on the map
+            thisMap.addListener('click', showValueOnMapClick);
 
             /*
             thisMap.data.addListener('click', (event) => {
@@ -103,9 +175,7 @@ Template.geojsonPreview.viewmodel({
 
 });
 
-function addListners(map) {
 
-}
 
 function drawLocationLabel(map) {
     /*
@@ -238,6 +308,7 @@ function setStyle(map) {
                 strokeColor: strokeColor,
                 strokeWeight: strokeWeight,
                 fillOpacity: 0,
+                clickable: false, // to prevent polygon handling mouse event so we still can click the map underneath to get EIRP or G/T value
             };
         } else {
             return {

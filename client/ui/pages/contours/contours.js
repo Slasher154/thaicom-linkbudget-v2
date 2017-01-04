@@ -199,7 +199,7 @@ Template.contours.viewmodel({
         if(this.showSingleTransponder()) {
             let transponder = Transponders.findOne({ _id: this.selectedConventionalTransponder() });
             let selectedValues = $('#conventional-value-picker').val();
-            console.log(selectedValues);
+            //console.log(selectedValues);
             if (selectedValues == null) {
                 Bert.alert('Please select at least 1 value', 'danger', 'fixed-top');
                 return false;
@@ -212,7 +212,7 @@ Template.contours.viewmodel({
                     value: value,
                 };
             });
-            console.log(JSON.stringify(contours));
+            //console.log(JSON.stringify(contours));
         }
 
         // Alert if contours object to send to database is undefined
