@@ -50,7 +50,13 @@ Template.contours.viewmodel({
         return Satellites.findOne({name: name}).type.toLowerCase() === typeToCheck.toLowerCase();
     },
     beamsAndDefinedContourSelected: false,
+    showBeamAndDefinedContours() {
+      return this.isHts() && this.beamsAndDefinedContourSelected();
+    },
     pasteFromExcelSelected: false,
+    showPasteFromExcel() {
+      return this.isHts() && this.pasteFromExcelSelected();
+    },
     countries() {
       if (this.isHts()) {
           // Get all countries from the transponders
@@ -88,6 +94,9 @@ Template.contours.viewmodel({
     },
     selectedDefinedContours: [],
     singleTransponderSelected: false,
+    showSingleTransponder() {
+      return this.isConventional() && this.singleTransponderSelected();
+    },
     conventionalTransponders() {
       if(this.selectedSatellite()){
           return Transponders.find({
@@ -151,7 +160,7 @@ Template.contours.viewmodel({
         }
 
         // HTS + Beams and Defined Contours
-        if(this.beamsAndDefinedContourSelected()) {
+        if(this.showBeamAndDefinedContours()) {
 
             // Get select transponders from dropdown, the value are transponder Ids
             let selectedTransponderIds = $('#hts-beam-picker').val();
@@ -178,7 +187,7 @@ Template.contours.viewmodel({
         }
 
         // Paste from Excel
-        if(this.pasteFromExcelSelected()) {
+        if(this.showPasteFromExcel()) {
 
 
 
@@ -187,7 +196,7 @@ Template.contours.viewmodel({
         }
 
         // Conventional + Select transponder and EIRP or G/T value from dropdown
-        if(this.singleTransponderSelected()) {
+        if(this.showSingleTransponder()) {
             let transponder = Transponders.findOne({ _id: this.selectedConventionalTransponder() });
             let selectedValues = $('#conventional-value-picker').val();
             console.log(selectedValues);

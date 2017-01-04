@@ -95,7 +95,7 @@ Meteor.methods({
             let featureCollection = Contours.findOne(searchQuery, projectionQuery);
             //console.log(JSON.stringify(featureCollection));
             let contourLogMessage = `Transponder ${contour.name} - ${contour.path} - ${options.parameter} | ${contour.value} dB : `;
-            if (featureCollection.features) {
+            if (featureCollection) {
 
                 // Assign category
                 let categoryNumber = 0;

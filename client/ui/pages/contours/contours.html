@@ -74,12 +74,12 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                        <div class="form-group" {{b "visible: showBeamAndDefinedContours"}}>
                             <label for="country-picker">Select Country</label>
                             <select id="country-picker" class="form-control" {{b "options: countries, value: selectedCountry, defaultText: 'Select country', defaultValue: '', change: countryChanged"}}>
                             </select>
                         </div>
-                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                        <div class="form-group" {{b "visible: showBeamAndDefinedContours"}}>
                             <label for="hts-beam-picker">Select Beam(s)</label>
                             <!--
                             <select id="hts-beam-picker" class="form-control select-picker" {{b "options: transponders, optionsValue: id, optionsText: name, value: selectedTransponders"}}>
@@ -88,7 +88,7 @@
 
                             </select>
                         </div>
-                        <div class="form-group" {{b "visible: beamsAndDefinedContourSelected"}}>
+                        <div class="form-group" {{b "visible: showBeamAndDefinedContours"}}>
                             <label>Select Defined Contours</label>
                             <div class="checkbox">
                                 <label>
@@ -123,22 +123,22 @@
                             </div>
                         </div>
 
-                        <div class="form-group" {{b "visible: singleTransponderSelected"}}>
+                        <div class="form-group" {{b "visible: showSingleTransponder"}}>
                             <label for="conventional-beam-picker">Select transponder</label>
                             <select id="conventional-beam-picker" class="form-control" data-dropup-auto="false" {{b "options: conventionalTransponders, , optionsValue: id, optionsText: name, value: selectedConventionalTransponder, defaultText: 'Select a transponder', defaultValue: '', change: conventionalTransponderChanged"}}>
 
                             </select>
                         </div>
 
-                        <div class="form-group" {{b "visible: singleTransponderSelected"}}>
-                            <label for="conventional-beam-picker">Select values</label>
+                        <div class="form-group" {{b "visible: showSingleTransponder"}}>
+                            <label for="conventional-value-picker">Select values</label>
                             <select id="conventional-value-picker" class="form-control select-picker" data-dropup-auto="false" multiple>
 
                             </select>
                         </div>
 
 
-                        <div class="form-group" {{b "visible: pasteFromExcelSelected"}}>
+                        <div class="form-group" {{b "visible: showPasteFromExcel"}}>
                             <label for="contour-data">Beam and Contour Line to be Drawn</label>
                             <textarea class="form-control" id="contour-data" rows="10" {{b "value: contours"}}></textarea>
                         </div>
