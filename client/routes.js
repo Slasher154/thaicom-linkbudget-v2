@@ -81,6 +81,13 @@ loggedIn.route('/contours/upload-gxt', {
     },
 });
 
+loggedIn.route('/polygon-filler', {
+    name: 'polygon-filler',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'polygonFiller' });
+    },
+});
+
 loggedIn.route('/education', {
     name: 'education',
     action() {

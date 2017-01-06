@@ -127,8 +127,8 @@ Template.uploadGxt.viewmodel({
                 })
                 Meteor.call('uploadContour', featureCollection, (error, result) => {
                     if (error) {
-                        Bert.alert(error, 'danger', 'fixed-top');                    } else {
-
+                        Bert.alert(error, 'danger', 'fixed-top');
+                    } else {
                         Bert.alert(`The ${properties.parameter} contour of transponder ${transponder.name} is successfully inserted/updated`, 'success', 'fixed-top');
                     }
                 });

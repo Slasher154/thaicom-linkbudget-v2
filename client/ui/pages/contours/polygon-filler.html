@@ -1,0 +1,20 @@
+<template name="polygonFiller">
+    <!-- Map -->
+    <div class="row">
+        <div class="col-sm-10 col-xs-12">
+            <div class="map-container">
+                {{> geojsonPreview mapData=mapData mapHeight=mapHeight}}
+            </div>
+        </div>
+        <div class="col-sm-2 col-xs-12">
+            <form>
+                <div class="form-group">
+                    <label class="control-label">Select GXT File</label>
+                    <input type="file" {{b "value: gxtFile"}} />
+                </div>
+                <button class="btn btn-primary" {{b "click: gxtSubmitted"}}>Submit</button>
+            </form>
+        </div>
+    </div>
+
+</template>

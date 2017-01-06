@@ -70,29 +70,12 @@ Meteor.methods({
                     }
                 }
             };
-            /*
-            let projectionQuery = {
-                fields: {
-                    properties: 1,
-                    features: {
-                        $elemMatch: {
-                            "properties.relativeGain": {
-                                $gte: contour.value - 0.05,
-                                $lt: contour.value + 0.05,
-                            },
-                        }
-                    }
-                }
-            };
-            */
-            //console.log('Search query is ' + JSON.stringify(searchQuery));
-            //console.log('---------------');
-            //console.log('Projection query is ' + JSON.stringify(projectionQuery));
 
-            // Return a feature collection along with single feature (query from projection query) that matches the relative gain
+            // Return a feature collection along with one or more features (query from projection query) that matches the relative gain
             // If there is no feature for that relative gain (such as number lower than -15dB for spot beams), the return document
             // will have only the properties attribute but not features (undefined)
-            let featureCollection = Contours.findOne(searchQuery, projectionQuery);
+            //let featureCollection = Contours.findOne(searchQuery, projectionQuery);
+            let featureCollection = Contours.findOne(searchQuery);
             //console.log(JSON.stringify(featureCollection));
             let contourLogMessage = `Transponder ${contour.name} - ${contour.path} - ${options.parameter} | ${contour.value} dB : `;
             if (featureCollection) {
@@ -110,10 +93,18 @@ Meteor.methods({
                 currentContourName = contour.name;
 
                 //console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
+                let minRange = +contour.value - 0.05;
+                let maxRange = +contour.value + 0.05;
 
-                featureCollection.features[0].properties.category = 'Category ' + categoryNumber;
-                resultContour.features.push(featureCollection.features[0]);
-                console.log(contourLogMessage + `Feature found`);
+                // Loop through each feature to find the contour which matched the contour value
+                featureCollection.features.forEach((f, index) => {
+                    if (f.properties[queryValue] > minRange && f.properties[queryValue] < maxRange) {
+                        console.log('Feature #' + index + ' ' + contour.value);
+                        f.properties.category = 'Category ' + categoryNumber;
+                        resultContour.features.push(f);
+                        console.log(contourLogMessage + `Feature found`);
+                    }
+                });
 
                 // Add beam peak to beam labels array
                 if (!_.findWhere(beamLabels, { text: featureCollection.properties.name })) {
@@ -302,6 +293,7 @@ Meteor.methods({
                     // Insert all polygons in this beam to the temporary contours MongoDB collection to perform mongodb json search against
                     // all contours, not as a whole feature collection
                     beam.features.forEach((contour) => {
+                        console.log(JSON.stringify(contour.properties));
                         TempContours.insert(contour);
                     });
 
@@ -322,6 +314,9 @@ Meteor.methods({
                     let filteredContour = TempContours.find(contourSearchQuery).fetch();
 
                     console.log('Number of filtered contours is ' + filteredContour.length);
+                    filteredContour.forEach((c) => {
+                        console.log('Contour ' + c.properties[queryValue]);
+                    });
 
                     // Get the element which has the lowest relative gain value = best contour
                     let bestContour = _.max(filteredContour, (contour) => {

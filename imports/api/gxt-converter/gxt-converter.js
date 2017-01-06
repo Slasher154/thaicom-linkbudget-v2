@@ -33,19 +33,19 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                     for (var i = 1; i < contours.length; i++) {
 
                         //console.log('');
-                        //console.log('Start Processing contour no ' + i);
+                        console.log('Start Processing contour no ' + i);
 
                         // Split contour data into coordinates (each element would be in the form of lat;lon
-                        let contourData = contours[i].split(/p[0-9]+\=/);
+                        let contourData = contours[i].split(/[pP][0-9]+\=/);
 
                         // Retrieve the relative gain value from the first element of the coords array
                         // Returned gain text would be a string 'gain=xx.xx'
                         let gainText = ExtractGainText(contourData[0]);
-                        //console.log('Gain Text = ' + gainText);
+                        console.log('Gain Text = ' + gainText);
 
                         // Extract the number behind gain=xx.xx and convert to float
                         let currentValue = ReadGainValue(gainText);
-                        //console.log(valueType + ' = ' + currentValue);
+                        console.log(valueType + ' = ' + currentValue);
 
 
                         // If the options say this is absolute value, convert it into relative
@@ -53,8 +53,11 @@ export const gxtConverter = (gxtFile, convertOptions) => {
 
                         // Remove the contour data section to leave only lon;lat texts and convert into array of lon,lat
                         // The return value will be the same as coordinates property of Geojson polygon object
+                        // console.log(JSON.stringify(contourData));
                         let polygon = ConvertCoordinatesTextLinesToPolygon(contourData.splice(1));
-                        //console.log('Polygon = ' + polygon);
+                        //console.log('Before Transform Polygon = ' + polygon);
+                        polygon = transformPolygon(polygon);
+                        //console.log('After Transform Polygon = ' + polygon);
 
                         // if the value of this contour line is higher than the previous one,
                         // this contour line is belonging to the next transponder (gain value of subsequent
@@ -63,7 +66,7 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                         // Except if this is first contour line (no previous value to compare)
                         if (currentValue > previousValue && i > 1) {
 
-                            //console.log('This contour is for the next transponder.');
+                            console.log('This contour is for the next transponder.');
 
                             // Push the current feature into feature collection
                             features.push(Object.assign({}, feature));
@@ -79,19 +82,20 @@ export const gxtConverter = (gxtFile, convertOptions) => {
 
                         // if the relative gain of this contour line is equal to the previous one,
                         // it is another polygon of the same contour line
-                        else if (currentValue === previousValue) {
+                        /*
+                        else if (currentValue === previousValue && i > 1) {
                             //console.log('This contour has the same relative gain as previous one');
                             feature.geometry.coordinates.push(polygon);
-                            //console.log('The new feature is ' + feature);
+                            console.log('The new feature is ' + JSON.stringify(feature));
                         }
-
+                        */
                         // This contour line is a new contour (different gain value from the previous one),
                         // Push the current feature to the array of features first, then
                         // initialize the feature object with the new relative gain value and polygon
                         else {
                             // Push the current feature except if this contour is the first line
                             if (i!=1) {
-                                //console.log('Push contour ' + previousValue + ' into the features array');
+                                console.log('Push contour ' + previousValue + ' into the features array');
                                 features.push(Object.assign({}, feature));
                             }
                             feature = InitializeFeature(polygon, valueType, currentValue);
@@ -107,7 +111,7 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                             //console.log('Push this featurecollection into transponder array');
                             transponders.push(CreateFeatureCollection(features.splice(0)));
                         }
-
+                        console.log('Features Length: ' + features.length);
                         previousValue = currentValue;
 
                     }
@@ -166,6 +170,7 @@ export const gxtConverter = (gxtFile, convertOptions) => {
 
                 // Value type is either 'relativeGain (for HTS), eirp (conventional) or gt (conventional)
                 function InitializeFeature(polygon, valueType, value) {
+
                     let feature = {
                         type: "Feature",
                         properties: {},
@@ -183,6 +188,39 @@ export const gxtConverter = (gxtFile, convertOptions) => {
                         type: 'FeatureCollection',
                         features: features,
                     }
+                }
+
+                function transformPolygon(polygon) {
+                    // Check if first and last element is the same point
+                    //console.log('First element of polygon = ' + polygon[0]);
+                    //console.log('Last element of polygon = ' + polygon[polygon.length-1]);
+                    if (polygon[0][0] != polygon[polygon.length-1][0] && polygon[0][1] != polygon[polygon.length-1][1]) {
+                        return false;
+                    }
+
+                    // Find the leftmost point (least longitude) of this polygon
+                    let leftmost = _.min(polygon, (latLng) => {
+                        return latLng[0];
+                    });
+                    console.log('Left most point is ' + leftmost);
+                    let leftmostIndex = polygon.indexOf(leftmost);
+                    //console.log('Left most index is ' + leftmostIndex);
+                    let nextPointIndex = leftmostIndex == polygon.length - 1 ? 0 : leftmostIndex + 1;
+                    let nextPoint = polygon[nextPointIndex];
+                    //console.log('Next point is ' + nextPoint);
+                    // Compare the latitude between left most point to the next point. If latitude goes up, polygon is rotating clockwise
+                    // Otherwise, polygon is rotating counterclockwise
+                    if (leftmost[1] > nextPoint[1]) {
+                        //console.log('Polygon is rotating counterclockwise');
+                        return polygon;
+                    }
+                    else {
+                        //console.log('Polygon is rotating clockwise, will reverse it');
+                        // Reverse the polygon to transform it into counterclockwise direction
+                        return polygon.reverse();
+                    }
+
+
                 }
             };
             reader.readAsText(gxtFile);
