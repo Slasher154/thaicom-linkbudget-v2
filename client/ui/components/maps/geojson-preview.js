@@ -106,7 +106,6 @@ Template.geojsonPreview.viewmodel({
                                 contentString += valueToDisplay == 'eirp' ? 'EIRP' : 'G/T';
                                 contentString += '</b>';
                                 contentString += ` = ${contour.value} `;
-                                contentString += valueToDisplay == 'eirp' ? 'dBW' : 'dB/K';
                                 contentString += '</div>';
                             });
                             //console.log(contentString);
@@ -114,6 +113,10 @@ Template.geojsonPreview.viewmodel({
                                 position: e.latLng,
                                 content: contentString
                             }).open(thisMap);
+
+                            // Add polygon on the map
+                            thisMap.data.addGeoJson(result.resultPolygons);
+                            setStyle(thisMap);
                         }
                     });
                 }
@@ -240,36 +243,41 @@ function drawContourValue(map, fontSize) {
         if(geometry.getType() === 'Polygon') {
             let contourValue = 0;
             let possibleAttributes = ['relativeGain', 'eirp', 'gt'];
-            // The feature must have property either 'relativeGain', 'eirp' or 'gt'
-            possibleAttributes.forEach((a) => {
-                let value = feature.getProperty(a);
-                if (value) {
-                    contourValue = value;
-                }
-            });
-            //console.log('Contour value = ' + contourValue);
-            geometry.getArray().forEach((path) => {
-                //Iterate over the points in the path to find the rightmost point (highest longitude)
-                /*
-                let rightmost = {
-                    lat: -100,
-                    lng: -200
-                };
-                path.getArray().forEach(function(latLng){
-                    if (latLng.lng() > rightmost.lng) {
-                        rightmost = latLng;
+            // If strokeweight = 0, hide the contour value by default (such as when the page just reloaded the dummy contour
+            let strokeWeight = feature.getProperty('strokeWeight');
+            if (strokeWeight != 0) {
+                // The feature must have property either 'relativeGain', 'eirp' or 'gt'
+                possibleAttributes.forEach((a) => {
+                    let value = feature.getProperty(a);
+                    if (value) {
+                        contourValue = value;
                     }
                 });
-                 */
-                let rightmost = _.max(path.getArray(), (latLng) => {
-                    return latLng.lng();
-                });
+                //console.log('Contour value = ' + contourValue);
+                geometry.getArray().forEach((path) => {
+                    //Iterate over the points in the path to find the rightmost point (highest longitude)
+                    /*
+                     let rightmost = {
+                     lat: -100,
+                     lng: -200
+                     };
+                     path.getArray().forEach(function(latLng){
+                     if (latLng.lng() > rightmost.lng) {
+                     rightmost = latLng;
+                     }
+                     });
+                     */
+                    let rightmost = _.max(path.getArray(), (latLng) => {
+                        return latLng.lng();
+                    });
 
-                //console.log('rightmost is ' + JSON.stringify(rightmost));
-                let customTxt = `<div style="font-size: ${fontSize + 'px'}">${contourValue}</div>`;
-                contourValueLabels.push(new TxtOverlay(rightmost, customTxt, "contourValueLabel", map));
+                    //console.log('rightmost is ' + JSON.stringify(rightmost));
+                    let customTxt = `<div style="font-size: ${fontSize + 'px'}">${contourValue}</div>`;
+                    contourValueLabels.push(new TxtOverlay(rightmost, customTxt, "contourValueLabel", map));
 
-            })
+                })
+            }
+
 
         }
     });

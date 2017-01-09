@@ -15,6 +15,8 @@
                                    data-toggle="tab">HTS from Excel</a></li>
         <li role="presentation"><a href="#formatting" aria-controls="formatting" role="tab"
                                    data-toggle="tab">Formatting</a></li>
+        <li role="presentation"><a href="#eirp-on-map-click" aria-controls="formatting" role="tab"
+                                   data-toggle="tab">EIRP on map click</a></li>
     </ul>
     <!-- Tab panes -->
     <div class="tab-content">
@@ -120,16 +122,64 @@
         </div>
         <div role="tabpanel" class="tab-pane" id="formatting">
             <h4><u>Formatting</u></h4>
-            <p>After you submit any type of contour requests, there will be options to adjust the color and thickness of contour lines and labels as following</p>
-            <ul>
-                <li>Toggle to show/hide beam label. Click this button will either show/hide all beam labels. You cannot select to show individual beam labels (either all or none). The beam label is displayed at the beam peak indicated by SatSoft program.</li>
-                <li>Toggle to show/hide contour value label. Click this button will either show/hide all contour value labels. You cannot select to show individual label (either all or none). The contour value label is displayed at the rightmost point of the contour line, which may result in the overlapping labels if the displayed contours are too close to each other.</li>
-                <li>Adjust beam label font size. Increase or decrease the beam label font size by 2 pixels.</li>
-                <li>Adjust contour value font size. Increase or decrease the contour value label font size by 2 pixels.</li>
-                <li>Adjust colors of contour lines. The number of colors shown here is equal to the number of category, which is determined by the input as following:</li>
-            </ul>
-            <img class="img-responsive" src="/images/how-to-contours/formatting.PNG" />
+            <div class="row">
+                <div class="col-sm-6 col-xs-12">
+                    <img class="img-responsive" src="/images/how-to-contours/formatting.PNG" />
+                </div>
+                <div class="col-sm-6 col-xs-12">
+                    <p>After you submit any type of contour requests, there will be options to adjust the color and thickness of contour lines and labels as following</p>
+                    <ul>
+                        <li>Toggle to show/hide beam label. Click this button will either show/hide all beam labels. You cannot select to show individual beam labels (either all or none). The beam label is displayed at the beam peak indicated by SatSoft program.</li>
+                        <li>Toggle to show/hide contour value label. Click this button will either show/hide all contour value labels. You cannot select to show individual label (either all or none). The contour value label is displayed at the rightmost point of the contour line, which may result in the overlapping labels if the displayed contours are too close to each other.</li>
+                        <li>Adjust beam label font size. Increase or decrease the beam label font size by 2 pixels.</li>
+                        <li>Adjust contour value font size. Increase or decrease the contour value label font size by 2 pixels.</li>
+                        <li>Adjust colors of contour lines. <strong>The color picker is a little buggy when you try to change color when the palette is opened up. Try click outside first and click the color picker again.</strong> The number of colors shown here is equal to the number of category, which is determined by the input as following:</li>
+                        <ul>
+                            <li>For conventional satellite, each selected value of EIRP or G/T will have its own color. The number of color in the initial pool is 9. Therefore, if more than 9 lines need to be drawn, same color will be reused.</li>
+                            <li>For HTS with defined contours, 50% will take 1 color, EOC will take another color and EOC-2 will also take another different color. Therefore, only 3 colors maximum will be used in this mode.</li>
+                            <li>For HTS with excel, the number of color used will be equal to the maximum number of given contours in the same beam. The color assigned to each contour line will depend on the order of input. For example, let's say our input is:</li>
+                            <ul>
+                                <li>203 fwd -2.4</li>
+                                <li>204 fwd -2.6</li>
+                                <li>207 fwd -2.7</li>
+                                <li>203 fwd -4.5</li>
+                                <li>204 fwd -4.7</li>
+                                <li>207 fwd -5.1</li>
+                            </ul>
+                            <li>The program will read the first row '203 fwd -2.4' and assign in the first category.</li>
+                            <li>Then, next row '204 fwd -2.6' will be read and checked if there is already beam '204 fwd' in the previous rows. If yes, assign it to the next category. Otherwise, (like in this case) also assign it into the 1st category</li>
+                            <li>Then, next row '207 fwd -2.7' will be read and checked if there is already beam '207 fwd' in the previous rows. If yes, assign it to the next category. Otherwise, (like in this case) also assign it into the 1st category</li>
+                            <li>Then, next row '203 fwd -4.5' will be read and checked if there is already beam '203 fwd' in the previous rows. Since there is beam '203 fwd' already in the first category, the program assign this contour to the 2nd category.</li>
+                            <li>Then, next row '204 fwd -4.7' will be read and checked if there is already beam '204 fwd' in the previous rows. Since there is beam '204 fwd' already in the first category, the program also assign this contour to the 2nd category.</li>
+                            <li>Then, next row '207 fwd -5.1' will be read and checked if there is already beam '207 fwd' in the previous rows. Since there is beam '207 fwd' already in the first category, the program also assign this contour to the 2nd category.</li>
+                            <li>Eventually, contour lines are categorized as:</li>
+                            <ul>
+                                <li>Category 1 (color 1): '203 fwd -2.4', '204 fwd -2.6', '207 fwd -2.7',  </li>
+                                <li>Category 2 (color 2): '203 fwd -4.5', '204 fwd -4.7', '207 fwd -5.1' </li>
+                            </ul>
+                            <li>This concept of assigning color comes from the common pattern of drawing contours on map to show different series on multiple beams (such as different antenna sizes) by CSD team. Same colors will be used across different HTS beams.</li>
+                        </ul>
+                    </ul>
+                </div>
+            </div>
         </div>
+        <div role="tabpanel" class="tab-pane" id="eirp-on-map-click">
+            <br>
+            <h4><u>Click on map to show EIRP or G/T value</u></h4>
+            <ul>
+                <li>This feature is available on conventional satellite only</li>
+                <li>This feature will be available once a transponder is selected. The clicked location will be search against that transponder only.</li>
+                <li>It will take a little delay before the popups with EIRP (or G/T) and lat/lon appears (around 5 seconds)</li>
+                <li>You don't need to select any EIRP or G/T value to use this feature. Just select the transponder and start clicking on the map</li>
+                <li>If the location is out of coverage stored in our database, it will show the least contour value in our database and says 'No coverage' (see image below)</li>
+            </ul>
+            <img class="img-responsive" src="/images/how-to-contours/eirp-on-map-click.PNG" />
+            <img class="img-responsive" src="/images/how-to-contours/eirp-on-map-click-no-coverage.PNG" />
+
+
+        </div>
+
+
     </div>
 
 </template>

@@ -14,16 +14,20 @@ Template.findContours.viewmodel({
         Meteor.subscribe('allTranspondersWithBasicInfo');
     },
     mapData: {
-        geojsonData: {
-            "type": "FeatureCollection",
-            "features": [{
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [100.514112, 13.859462],
-                },
-
-            }]
+        geojsonData: { "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [[77.08, 5.09],[118.78, 4.47], [116.72, 24.52], [76.81, 24.24],[77.08, 5.09]]
+                        ]
+                    },
+                    "properties": {
+                        "strokeWeight": 0,
+                    }
+                }
+            ]
         },
     },
     mapHeight: '700px',

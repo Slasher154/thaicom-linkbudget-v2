@@ -180,7 +180,7 @@ Meteor.methods({
                 unitText = 'dB';
             } else {
                 queryValue = options.parameter;
-                unitText = queryValue.toLowerCase() === 'eirp' ? 'dBW' : 'G/T dB/K';
+                unitText = queryValue.toLowerCase() === 'eirp' ? 'dBW' : 'dB/K';
             }
 
 
@@ -256,7 +256,7 @@ Meteor.methods({
 
                             // Add the contour value at the end of no coverage message to let user knows that the coverage shown is at which dB
                             noCoverageMessage.bestBeam = featureCollection.properties.name;
-                            noCoverageMessage.value = 'No coverage within ' + noCoverageMessage.value + ' within ' + lowestContourFeature.properties[queryValue] + ' ' + unitText;
+                            noCoverageMessage.value = noCoverageMessage.value + ' within ' + lowestContourFeature.properties[queryValue] + ' ' + unitText;
 
                             // Push the beam labels
                             // Add beam peak to beam labels array
@@ -341,7 +341,7 @@ Meteor.methods({
                         latitude: coordinate.latitude,
                         longitude: coordinate.longitude,
                         bestBeam: bestContour.properties.name,
-                        value: bestContour.properties[queryValue],
+                        value: bestContour.properties[queryValue] + ' ' + unitText,
                     });
 
                     // Push the beam labels
