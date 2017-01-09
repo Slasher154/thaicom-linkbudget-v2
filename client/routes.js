@@ -95,6 +95,13 @@ loggedIn.route('/education', {
     },
 });
 
+loggedIn.route('/how-to-contours', {
+    name: 'how-to-contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'howToContours' });
+    },
+})
+
 loggedIn.route('/video', {
     name: 'video',
     action() {

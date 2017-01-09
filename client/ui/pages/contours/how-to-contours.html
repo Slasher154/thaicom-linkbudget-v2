@@ -1,0 +1,135 @@
+<template name="howToContours">
+    <div class="page-header">
+        <h1>User Manual: Show contours on map</h1>
+    </div>
+    <h4>This page explains how to select Thaicom satellite contour lines to show on Google maps</h4>
+    <h4><a href="{{pathFor 'contours'}}">Link to show contour page</a></h4>
+    <br>
+    <br>
+    <ul class="nav nav-tabs">
+        <li role="presentation" class="active"><a href="#conventional" aria-controls="conventional" role="tab" data-toggle="tab">Conventional Satellites</a>
+        </li>
+        <li role="presentation"><a href="#hts-defined-contour" aria-controls="hts-defined-contour" role="tab"
+                                   data-toggle="tab">HTS (Select 50%, EOC)</a></li>
+        <li role="presentation"><a href="#hts-excel" aria-controls="hts-excel" role="tab"
+                                   data-toggle="tab">HTS from Excel</a></li>
+        <li role="presentation"><a href="#formatting" aria-controls="formatting" role="tab"
+                                   data-toggle="tab">Formatting</a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="conventional">
+            <div class="row">
+                <br>
+                <h4><u>Conventional Satellite</u></h4>
+                <ol>
+                    <li>Select a satellite (either Thaicom 5, Thaicom 6 or Thaicom 7). Input methods, select transponder and select values menus will appear.</li>
+                    <li>Select value to display (EIRP or G/T)</li>
+                    <li>For input methods, only 'Select Transponder and EIRP' is enabled as of now. So you don't need to select anything under this menu.</li>
+                    <li>Select a transponder. Only 1 transponder can be shown at a time.</li>
+                    <li>Select contour values to show. Multiple values are allowed so you can draw multiple lines simultaneously. </li>
+                    <li>Click 'Submit'</li>
+                </ol>
+                See the image below for reference.
+                <h4><u>Notes</u></h4>
+                <ul>
+                    <li>For Thaicom 5 and Thaicom 6, following transponders share the same set of contours in the database</li>
+                    <ul>
+                        <li>Thaicom 5 - Standard C: 1V, 2V, 3V, 4V, 5V, 6V, 7V, 8V, 9V, 10V, 11V, 12V</li>
+                        <li>Thaicom 5 - Global C: 1G, 2G, 3G, 4G, 5G, 6G, 7G </li>
+                        <li>Thaicom 5 - Extended C: 1E, 2E, 3E, 4E, 5E, 6E</li>
+                        <li>Thaicom 5 - Thailand KU: K1H, K2H, K3H, K4H, K5H, K6H, K7H, K8H, K9H, K10H, K11H</li>
+                        <li>Thaicom 5 - Steerable KU: K8V, K9V, K10V, K11V, K12V, K13V, K14V</li>
+                        <li>Thaicom 6 - C1 Beams: C101, C102, C103, C104, C105, C106, C107, C108, C109, C110, C111, C112</li>
+                        <li>Thaicom 6 - C2 Beams: C201, C202, C203, C204, C205, C206</li>
+                        <li>Thaicom 6 - KU Beams: K01, K02, K03, K04, K05, K06, K07, K08</li>
+                    </ul>
+                    <li>This means if you select EIRP 50 dBW of transponder 1V, you will get an identical contour line as EIRP 50 dBW of transponder 2V</li>
+                    <li>Meanwhile, contour lines in the database for each Thaicom 7 transponders are slightly different</li>
+                    <li>The contours on semi-global beam transponders (1V, 2V, 3V, 5V, 13V) <strong>are not working yet</strong>. This is because the polygon generated from SatSoft (which we use as our data source) is not a complete polygon due to satellite looking angle. We managed to fix only the Thaicom 5 global beams as of now (require a hand-fix).</li>
+                    <li>The range of available contours in our database for conventional satellites is controlled and selected by CNS team. If you need to draw the contour beyond our available options, please contact CNS department directly.</li>
+                </ul>
+                <img class="img-responsive" src="/images/how-to-contours/conventional.PNG" />
+                <img class="img-responsive" src="/images/how-to-contours/conventional-result.PNG" />
+            </div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="hts-defined-contour">
+            <br>
+            <h4><u>HTS (Select 50%, EOC)</u></h4>
+            In this mode, you select the beam(s) to show contour at 50%, EOC, EOC-2
+            <ol>
+                <li>Select HTS (i.e. Thaicom 4). Input methods menu will appear.</li>
+                <li>Select value to display</li>
+                <ul>
+                    <li>For KU spot beams contour, you must select 'EIRP' for forward beams and 'G/T' for return beams</li>
+                    <li>If you select 'EIRP' here but input return beams, it will result in Ka-band gateway beam (same as G/T with forward)</li>
+                </ul>
+                <li>Select 'Beams & Defined Contours'</li>
+                <li>Select country. Only 1 country can be selected at a time.</li>
+                <li>Select beam(s).</li>
+                <li>Select defined contours value to display (50%, EOC, or EOC-2)</li>
+                <li>Click 'Submit'</li>
+
+            </ol>
+            <h4><u>Notes</u></h4>
+            <ul>
+                <li>Since gateway beams do not implement the concept of 50%, EOC and EOC-2, trying to plot gateway beams in this mode will result into an error.</li>
+            </ul>
+            <img class="img-responsive" src="/images/how-to-contours/hts-defined-contour.PNG" />
+            <img class="img-responsive" src="/images/how-to-contours/hts-defined-contour-result.PNG" />
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="hts-excel">
+            <br>
+            <h4><u>HTS from Excel</u></h4>
+            In this mode, you specify the beam name, path and relative contour value in the excel table then copy the table into the textbox. Our program will read row by row to get all the contour lines.
+            <ol>
+                <li>Select HTS (i.e. Thaicom 4). Input methods menu will appear.</li>
+                <li>Select value to display</li>
+                <ul>
+                    <li>For KU spot beams contour, you must select 'EIRP' for forward beams and 'G/T' for return beams</li>
+                    <li>If you select 'EIRP' here but input return beams, it will result in Ka-band gateway beam (same as G/T with forward)</li>
+                </ul>
+                <li>Select 'Paste from Excel'</li>
+                <li>Create the table in Excel with each row specifying beam name, path and relative contour value.</li>
+                <ul>
+                    <li>1st Column: Beam name - See list below for available beam names. You must use this exact name to query our database. Most beam names are fairly intuitive except 212 where you need to either put 212-13H or 212-3V (both show the same result though), and broadcast beams where it is divided by high and low band</li>
+                    <li>2nd Column: Path - This should be either 'forward', 'fwd', 'return' or 'rtn'</li>
+                    <li>3rd Column: Relative contour value from beam peak - Must be negative</li>
+                </ul>
+                <li>Copy the table into the big textbox</li>
+                <li>Click 'Submit'</li>
+            </ol>
+            <h4><u>Available Beam Names for Augment and Broadcast beams - Thaicom 4</u></h4>
+            <p>Augment beams</p>
+            <ul>
+                {{#each beam in thaicom4Augment}}
+                    <li>{{beam}}</li>
+                {{/each}}
+            </ul>
+            <p>Broadcast beams (combine these beams with path 'return' or 'rtn' will cause an error) </p>
+            <ul>
+                {{#each beam in thaicom4Broadcast}}
+                    <li>{{beam}}</li>
+                {{/each}}
+            </ul>
+            <img class="img-responsive" src="/images/excel-table.PNG" />
+            <img class="img-responsive" src="/images/how-to-contours/hts-excel.PNG" />
+            <img class="img-responsive" src="/images/how-to-contours/hts-excel-result.PNG" />
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="formatting">
+            <h4><u>Formatting</u></h4>
+            <p>After you submit any type of contour requests, there will be options to adjust the color and thickness of contour lines and labels as following</p>
+            <ul>
+                <li>Toggle to show/hide beam label. Click this button will either show/hide all beam labels. You cannot select to show individual beam labels (either all or none). The beam label is displayed at the beam peak indicated by SatSoft program.</li>
+                <li>Toggle to show/hide contour value label. Click this button will either show/hide all contour value labels. You cannot select to show individual label (either all or none). The contour value label is displayed at the rightmost point of the contour line, which may result in the overlapping labels if the displayed contours are too close to each other.</li>
+                <li>Adjust beam label font size. Increase or decrease the beam label font size by 2 pixels.</li>
+                <li>Adjust contour value font size. Increase or decrease the contour value label font size by 2 pixels.</li>
+                <li>Adjust colors of contour lines. The number of colors shown here is equal to the number of category, which is determined by the input as following:</li>
+            </ul>
+            <img class="img-responsive" src="/images/how-to-contours/formatting.PNG" />
+        </div>
+    </div>
+
+</template>

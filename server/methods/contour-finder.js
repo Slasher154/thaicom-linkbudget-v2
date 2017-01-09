@@ -56,10 +56,13 @@ Meteor.methods({
             // i.e. the input and value store in database is not the same double in terms of how mongodb treat the double
             // http://stackoverflow.com/questions/32798386/mongodb-how-to-get-n-decimals-precision-in-a-query
             let elemMatchQuery = {};
+            let queryStepUp = 0.051;
+            let queryStepDown = 0.049;
+
             // Put the plus sign in front of contour.value to prevent some weird case where contour.value turns into String
             elemMatchQuery['properties' + '.' + queryValue] = {
-                $gte: +contour.value - 0.05,
-                $lt: +contour.value + 0.05,
+                $gte: +contour.value - queryStepDown,
+                $lt: +contour.value + queryStepUp,
             };
             console.log(JSON.stringify(elemMatchQuery));
             let projectionQuery = {
@@ -93,10 +96,12 @@ Meteor.methods({
                 currentContourName = contour.name;
 
                 //console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
-                let minRange = +contour.value - 0.05;
-                let maxRange = +contour.value + 0.05;
+                let minRange = +contour.value - queryStepDown;
+                let maxRange = +contour.value + queryStepUp;
 
                 // Loop through each feature to find the contour which matched the contour value
+                // Takes only the first one matched. From the query, it is likely that there is only 1 feature matched.
+                // However, if the given contour ends with .05, 2 features will match.
                 featureCollection.features.forEach((f, index) => {
                     if (f.properties[queryValue] > minRange && f.properties[queryValue] < maxRange) {
                         console.log('Feature #' + index + ' ' + contour.value);

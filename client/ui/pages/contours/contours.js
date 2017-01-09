@@ -97,6 +97,7 @@ Template.contours.viewmodel({
     showSingleTransponder() {
       return this.isConventional() && this.singleTransponderSelected();
     },
+    enableMinimumValueStep: false,
     conventionalTransponders() {
       if(this.selectedSatellite()){
           return Transponders.find({
@@ -127,8 +128,12 @@ Template.contours.viewmodel({
             let values = [];
             if (contour) {
                 // Generate the array from highest value to lowest value
-                let step = 0.5;
+                //let step = this.enableMinimumValueStep() ? 0.1 : 0.5;
+                let step = 0.1;
                 values = _.range(contour.properties.minimumContour, contour.properties.maximumContour + step, step).reverse();
+                values = values.map((val) => {
+                    return Math.round(val * 10) / 10;
+                });
             }
             else {
                 Bert.alert(`Cannot determine the range of ${this.selectedValueToDisplay()} of this transponder to select from`, 'danger', 'fixed-top');
@@ -424,7 +429,7 @@ Template.contours.viewmodel({
         this.applyFormatting();
         this.renderMap();
     },
-    strokeWeight: 1,
+    strokeWeight: 5,
     increaseStrokeWeight(event) {
         event.preventDefault();
         let currentWeight = this.strokeWeight();

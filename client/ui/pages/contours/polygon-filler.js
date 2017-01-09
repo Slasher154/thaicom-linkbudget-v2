@@ -47,6 +47,7 @@ Template.polygonFiller.viewmodel({
                 let featureCollection = results[0];
 
                 // Loop through each feature and give them properties as well
+                $('.map-container').empty();
                 Blaze.renderWithData(Template.geojsonPreview, {
                     mapData: {
                         geojsonData: featureCollection,
