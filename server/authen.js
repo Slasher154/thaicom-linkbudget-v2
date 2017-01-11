@@ -9,7 +9,7 @@ Meteor.methods({
         check(password, String);
 
         // If this is the first user to login, generate a dummy data and make him admin
-        if (Meteor.users.find().count() === 0) {
+        if (Meteor.users.find().count() === 0 && Meteor.settings.public.createDummyAdmin) {
             try {
                 const dummyPassword = Meteor.settings.public.dummyPassword;
                 _createDummyAdmin(username, dummyPassword);
@@ -21,7 +21,7 @@ Meteor.methods({
         // If username and password is the same as first user to login, bypass the Thaicom authentication
         // The purpose is to let us continue developing the app while the Thaicom authen access is not arrived
         // (waiting reply from MIS, etc.)
-        else if (Meteor.users.findOne({ username: username, firstUser: true })) {
+        else if (Meteor.users.findOne({ username: username, firstUser: true }) && Meteor.settings.public.bypassAuthenForFirstUser) {
             return 'Authentication success';
         }
 
@@ -36,8 +36,8 @@ Meteor.methods({
             _insertOrUpdateEmployeeDataInOurApplication(employeeProfile);
             return 'Authentication success';
         }).catch((error) => {
-           console.log('Error message = ' + error);
-           throw new Meteor.Error('500', error);
+            console.log('Error message = ' + error);
+            throw new Meteor.Error('500', error);
         });
     }
 });
@@ -109,7 +109,14 @@ let _insertOrUpdateEmployeeDataInOurApplication = (profile) => {
     if (!Meteor.users.findOne({ username: employeeProfile.username })){
         const dummyPassword = Meteor.settings.public.dummyPassword;
         employeeProfile.password = dummyPassword;
-        _createUser(employeeProfile);
+        let newUser = _createUser(employeeProfile);
+
+        // If this is the first user to login, give that user admin
+        if (Meteor.users.find().count() === 0) {
+            // Add admin roles to this user
+            Roles.addUsersToRoles(newUser, 'admin', Roles.GLOBAL_GROUP);
+        }
+
     }
     // Otherwise, update our database with new employee profile. This means every time a user logs in
     // His/her data in our application will be refreshed. (yes, re-organization happens)

@@ -6,6 +6,10 @@
             padding-left: 20px;
             padding-top: 60px;
         }
+        .loading {
+            font-size: large;
+            color: red;
+        }
     </style>
     <!--
     <div class="page-header">
@@ -20,8 +24,10 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#input-selector" aria-controls="input-selector" role="tab" data-toggle="tab">Input</a>
                 </li>
+                <!--
                 <li role="presentation"><a href="#contour-modifier" aria-controls="contour-modifier" role="tab"
                                            data-toggle="tab">Formatting</a></li>
+                -->
 
             </ul>
             <!-- Tab panes -->
@@ -76,16 +82,19 @@
 
                         <!-- Pairs of Lat/Lon input -->
                         <div class="form-group">
-                            <label for="coordinates">Pairs of Lat/Lon to find contours</label>
+                            <label for="coordinates">Pairs of Lon/Lat to find contours</label>
+                            <a href="#" data-toggle="modal" data-target="#howTo">Click to show example input</a>
                             <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
                         </div>
                         <button class="btn btn-primary" {{b "click: coordsSubmitted"}}>Submit</button>
 
                     </form>
                 </div>
+                <!--
                 <div role="tabpanel" class="tab-pane" id="contour-modifier">
                     <h4>No contours yet</h4>
                 </div>
+                -->
             </div>
 
         </div>
@@ -94,13 +103,13 @@
         <!-- Search Result-->
         <div class="col-sm-4 col-xs-12">
             <h4>Search Results</h4>
-            <div class="loading"></div>
-            <table class="table table-bordered" id="results" {{b "visible: resultShown"}}>
+            <div class="loading text-center"></div>
+            <table class="table table-bordered table-striped" id="results" {{b "visible: resultShown"}}>
                 <thead>
                 <tr>
                     <th>No.</th>
-                    <th>Latitude</th>
                     <th>Longitude</th>
+                    <th>Latitude</th>
                     <th>Covered beam</th>
                     <th>{{valueText}}</th>
                 </tr>
@@ -122,4 +131,29 @@
 
     </div>
     <!-- /.row -->
+
+    <!-- Modal -->
+    <!-- Modal -->
+    <div class="modal fade" id="howTo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Sample Input</h4>
+                </div>
+                <div class="modal-body">
+                    <h4>Single line of comma separated longitude and latitude (no space)</h4>
+                    <textarea class="form-control" rows="5">100,9</textarea>
+                    <h4>Multiple lines of comma separated longitude and latitude (no space)</h4>
+                    <textarea class="form-control" id="multipleCsv" rows="5"></textarea>
+                    <h4>Copy multiple coordinates from Excel</h4>
+                    <img class="img-responsive" src="/images/how-to-latlon-input/excel-coords-input.PNG" />
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>

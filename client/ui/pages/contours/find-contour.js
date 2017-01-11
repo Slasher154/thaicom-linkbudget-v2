@@ -13,6 +13,10 @@ Template.findContours.viewmodel({
         Meteor.subscribe('allThaicomSatellites');
         Meteor.subscribe('allTranspondersWithBasicInfo');
     },
+    onRendered(){
+      $('#multipleCsv').val('100.2139,9.133\n98.345,-0.445\n92.1344,1.334');
+      $('#excelInput').val('100.2139\t9.133\n98.345\t-0.445\n92.1344\t1.334');
+    },
     mapData: {
         geojsonData: { "type": "FeatureCollection",
             "features": [
@@ -181,8 +185,8 @@ Template.findContours.viewmodel({
                 result.resultContours.forEach((contour, index) => {
                     tableHtml += '<tr>';
                     tableHtml += `<td>${index+1}</td>`;
-                    tableHtml += `<td>${contour.latitude}</td>`;
                     tableHtml += `<td>${contour.longitude}</td>`;
+                    tableHtml += `<td>${contour.latitude}</td>`;
                     tableHtml += `<td>${contour.bestBeam}</td>`;
                     tableHtml += `<td>${contour.value}</td>`;
                     tableHtml += '</tr>';
@@ -209,22 +213,30 @@ Template.findContours.viewmodel({
             rows.forEach((row) => {
                 let columns = row.split('\t');
 
-                if (columns.length != 2) {
+                let lat = -200, lon = -200;
+
+                // If columns after split = 1, check if it's valid coordinates in the form of longitude,latitude
+                if (columns.length == 1) {
+                    let splitString = columns[0].split(',');
+                    if (splitString.length < 2) {
+                        return false;
+                    }
+                    lon = columns[0].split(',')[0];
+                    lat = columns[0].split(',')[1];
+                }
+
+                else if (columns.length != 2) {
                     return false;
+                }
+                else {
+                    // 1st column = longitude
+                    lon = columns[0];
+
+                    // 2nd column = latitude
+                    lat = columns[1];
                 }
                 let coordsLine = {};
 
-                // 1st column = latitude
-                let lat = columns[0];
-                if (isNaN(lat) || lat <= -90 || lat >= 90) {
-                    Bert.alert('Latitude is not correct', 'danger', 'fixed-top');
-                    return false;
-                }
-                // Convert latitude to number by preceding with + sign
-                coordsLine.latitude = +lat;
-
-                // 2nd column = longitude
-                let lon = columns[1];
                 if (isNaN(lon) || lon <= -180 || lon >= 180) {
                     Bert.alert('Longitude is not correct', 'danger', 'fixed-top');
                     return false;
@@ -232,9 +244,19 @@ Template.findContours.viewmodel({
                 // Convert longitude to number by preceding with + sign
                 coordsLine.longitude = +lon;
 
+
+
+                if (isNaN(lat) || lat <= -90 || lat >= 90) {
+                    Bert.alert('Latitude is not correct', 'danger', 'fixed-top');
+                    return false;
+                }
+                // Convert latitude to number by preceding with + sign
+                coordsLine.latitude = +lat;
+
                 formattedcoords.push(coordsLine);
             });
             return formattedcoords;
         }
     },
+
 });
