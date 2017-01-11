@@ -65,11 +65,13 @@
                             </div>
                         </div>
                         -->
-                        <input {{b "check: findSpecificTransponder, disable: forceSpecificTransponder"}} type="checkbox"> <label>Find contour on specific transponder</label>
-                        <p class="help-block">If not checked, program will return all beams that covered given locations</p>
+                        <div class="form-group" {{b "visible: selectedSatellite"}}>
+                            <input {{b "check: findSpecificTransponder, disable: forceSpecificTransponder"}} type="checkbox"> <label>Find contour on specific transponder</label>
+                            <p class="help-block">If not checked, program will return all beams that covered given locations</p>
+                        </div>
                         <br>
                         <!-- Transponder Selector -->
-                        <div class="form-group" {{b "visible: findSpecificTransponder"}}>
+                        <div class="form-group" {{b "visible: showTransponderPicker"}}>
 
                             <label for="transponder-picker">Transponder</label>
                             <!--
@@ -81,12 +83,12 @@
                         </div>
 
                         <!-- Pairs of Lat/Lon input -->
-                        <div class="form-group">
+                        <div class="form-group" {{b "visible: selectedSatellite"}}>
                             <label for="coordinates">Pairs of Lon/Lat to find contours</label>
                             <a href="#" data-toggle="modal" data-target="#howTo">Click to show example input</a>
                             <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
                         </div>
-                        <button class="btn btn-primary" {{b "click: coordsSubmitted"}}>Submit</button>
+                        <button class="btn btn-primary" {{b "click: coordsSubmitted, visible: selectedSatellite"}}>Submit</button>
 
                     </form>
                 </div>

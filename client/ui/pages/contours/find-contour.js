@@ -82,6 +82,9 @@ Template.findContours.viewmodel({
         return this.isConventional();
     },
     findSpecificTransponder: true,
+    showTransponderPicker() {
+        return this.selectedSatellite() && this.findSpecificTransponder();
+    },
     transponders() {
         if (this.selectedSatellite()) {
             let attributeToShow = '';

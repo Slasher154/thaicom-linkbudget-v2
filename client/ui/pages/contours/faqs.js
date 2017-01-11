@@ -42,7 +42,7 @@ Template.faqs.viewmodel({
             },
             {
                 title: `I believe some contours in this database is incorrect....`,
-                answer: `Submit your findings to thanatv@thaicom.net so we can review this.`
+                answer: `Email your findings to thanatv@thaicom.net so we can review this.`
             },
             {
                 title: `I have more questions..`,
