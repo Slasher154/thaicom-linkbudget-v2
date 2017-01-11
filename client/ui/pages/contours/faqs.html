@@ -1,0 +1,23 @@
+<template name="faqs">
+    <div class="page-header">
+        <h1>FAQS</h1>
+    </div>
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        {{#each question in questions}}
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="{{question.heading}}">
+                <h4 class="panel-title">
+                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#{{question.collapseId}}" aria-expanded="false" aria-controls="{{question.collapseId}}">
+                        {{question.title}}
+                    </a>
+                </h4>
+            </div>
+            <div id="{{question.collapseId}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="{{question.heading}}">
+                <div class="panel-body">
+                    {{question.answer}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</template>

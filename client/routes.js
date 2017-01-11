@@ -100,7 +100,21 @@ loggedIn.route('/how-to-contours', {
     action() {
         BlazeLayout.render('mainLayout', { content: 'howToContours' });
     },
-})
+});
+
+loggedIn.route('/how-to-latlon-input', {
+    name: 'how-to-latlon-input',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'howToLatlonInput' });
+    },
+});
+
+loggedIn.route('/faqs', {
+    name: 'faqs',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'faqs' });
+    },
+});
 
 loggedIn.route('/video', {
     name: 'video',

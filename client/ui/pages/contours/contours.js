@@ -252,6 +252,9 @@ Template.contours.viewmodel({
                     })
                     Bert.alert(`<ul>${listMessages.join('')}</ul>`, 'danger', 'fixed-top');
 
+                    // Show 'formatting' tab
+                    $('a[href="#contour-modifier"]').tab('show');
+
                 } else {
                     self.logMessages([]);
                 }

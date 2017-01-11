@@ -64,7 +64,7 @@ Meteor.methods({
                 $gte: +contour.value - queryStepDown,
                 $lt: +contour.value + queryStepUp,
             };
-            console.log(JSON.stringify(elemMatchQuery));
+            //console.log(JSON.stringify(elemMatchQuery));
             let projectionQuery = {
                 fields: {
                     properties: 1,
@@ -154,6 +154,11 @@ Meteor.methods({
 
         options.coordinates.forEach((coordinate) => {
 
+            // Find the contour with least minimum value that still cover this beam
+            let bestBeam = '';
+            let leastContour = -999;
+            let tempContoursArray = [];
+
             // Add the marker feature to our result to be displayed with label on the client
             resultFeatureCollection.features.push({
                 type: 'Feature',
@@ -239,7 +244,7 @@ Meteor.methods({
 
                 // Add the widest contour in the database of that transponder to show why it is not covered if user specifies the transponder
                 if (options.names && options.path) {
-                    console.log(JSON.stringify(propertiesQuery));
+                    //console.log(JSON.stringify(propertiesQuery));
                     options.names.forEach((transponderName) => {
                         let featureCollection = Contours.findOne({
                             "properties.name": transponderName,
@@ -282,7 +287,7 @@ Meteor.methods({
             }
 
             else {
-                // Find the contour with least minimum value that still cover this beam
+
                 coveredBeams.forEach((beam, index) => {
 
                     /*
@@ -298,7 +303,7 @@ Meteor.methods({
                     // Insert all polygons in this beam to the temporary contours MongoDB collection to perform mongodb json search against
                     // all contours, not as a whole feature collection
                     beam.features.forEach((contour) => {
-                        console.log(JSON.stringify(contour.properties));
+                        //console.log(JSON.stringify(contour.properties));
                         TempContours.insert(contour);
                     });
 
@@ -320,7 +325,7 @@ Meteor.methods({
 
                     console.log('Number of filtered contours is ' + filteredContour.length);
                     filteredContour.forEach((c) => {
-                        console.log('Contour ' + c.properties[queryValue]);
+                        //console.log('Contour ' + c.properties[queryValue]);
                     });
 
                     // Get the element which has the lowest relative gain value = best contour
@@ -333,7 +338,14 @@ Meteor.methods({
                     bestContour.properties.color = mapColors[index % mapColors.length];
 
                     // Push data into result polygon array
-                    resultFeatureCollection.features.push(bestContour);
+                    //resultFeatureCollection.features.push(bestContour);
+                    tempContoursArray.push(bestContour);
+
+                    // Store this value to our temporary parameters
+                    if (bestContour.properties[queryValue] > leastContour) {
+                        bestBeam = bestContour.properties.name;
+                        leastContour = bestContour.properties[queryValue];
+                    }
 
                     // Push data to result table
                     console.log('Best contour of ' + coordinate.longitude + ',' + coordinate.latitude + ' is beam ' + bestContour.properties.name + ' at ' + bestContour.properties[queryValue] + ' ' + unitText);
@@ -344,20 +356,34 @@ Meteor.methods({
                         value: bestContour.properties[queryValue] + ' ' + unitText,
                     });
 
-                    // Push the beam labels
-                    // Add beam peak to beam labels array
-                    if (!_.findWhere(beamLabels, { text: bestContour.properties.name })) {
-                        beamLabels.push({
-                            text: bestContour.properties.name,
-                            latitude: bestContour.properties.peakLatitude,
-                            longitude: bestContour.properties.peakLongitude,
-                            fontSize: 12,
-                            visible: true,
-                        });
-                    }
-
                     // Remove all document from temp contours
                     TempContours.remove({});
+                });
+
+                // Add the best beam property to the result contours
+                resultContours.forEach((c) => {
+                    if (c.latitude == coordinate.latitude && c.longitude == coordinate.longitude && c.bestBeam == bestBeam) {
+                        console.log('Beam ' + c.bestBeam + ' is best beam for ' + c.longitude + ',' + c.latitude);
+                        c.isBestBeam = true;
+
+                        // Find Geojson of that beam and push into result array
+                        let bestContour = _.filter(tempContoursArray, (c) => {
+                            return c.properties.name == bestBeam;
+                        })[0];
+                        resultFeatureCollection.features.push(bestContour);
+
+                        // Push the beam labels
+                        // Add beam peak to beam labels array
+                        if (!_.findWhere(beamLabels, { text: bestContour.properties.name })) {
+                            beamLabels.push({
+                                text: bestContour.properties.name,
+                                latitude: bestContour.properties.peakLatitude,
+                                longitude: bestContour.properties.peakLongitude,
+                                fontSize: 12,
+                                visible: true,
+                            });
+                        }
+                    }
                 });
             }
 

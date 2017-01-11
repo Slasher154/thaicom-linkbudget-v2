@@ -54,6 +54,8 @@ Template.findContours.viewmodel({
             }).fetch();
             if (this.isConventional()) {
                 attributeToShow = 'beam';
+                // Change select specific transponder to true
+                this.findSpecificTransponder(true);
             } else {
                 attributeToShow = 'path';
                 transponders = transponders.sort(htsTransponderSorter);
@@ -63,6 +65,7 @@ Template.findContours.viewmodel({
                 return `<option value="${tp._id}">${tp.name} (${tp[attributeToShow]})</option>`;
             });
             $transponderPicker.append(options).selectpicker('refresh');
+
         }
     },
     selectedSatellite: '',
@@ -109,9 +112,21 @@ Template.findContours.viewmodel({
         return 'Relative Contour (dB)';
     },
     resultShown: false,
+    resultContours: [],
+    showBestBeamOnly: true,
+    toggleShowBestBeamOnlyText() {
+        if(this.showBestBeamOnly()){
+            return 'Show all beams';
+        }
+        return 'Show best beam only';
+    },
+    toggleShowBestBeamOnly(event) {
+        event.preventDefault();
+        this.showBestBeamOnly(!this.showBestBeamOnly());
+        renderResultTable(this.resultContours(), this.showBestBeamOnly());
+    },
     coordsSubmitted(event) {
         event.preventDefault();
-        $('.loading').text('Searching for contours.....');
         let self = this;
 
         let satellite = self.selectedSatellite();
@@ -143,7 +158,7 @@ Template.findContours.viewmodel({
         let transponders = [];
         if (self.findSpecificTransponder()) {
             let transponderIds = $('#transponder-picker').val();
-            if (!transponders) {
+            if (!transponderIds) {
                 Bert.alert('Please select at least 1 transponder', 'danger', 'fixed-top');
                 return false;
             }
@@ -162,7 +177,7 @@ Template.findContours.viewmodel({
                 options.path = paths[0];
             }
         }
-
+        $('.loading').text('Searching for contours... This might takes time especially when no transponder is specified.');
         Meteor.call('findContoursValueFromCoordinates', options, (error, result) => {
             if (error) {
                 Bert.alert(error.reason, 'danger', 'fixed-top');
@@ -170,6 +185,10 @@ Template.findContours.viewmodel({
             else {
                 $('.map-container').empty();
                 //console.log(JSON.stringify(result));
+
+                // Attach results to this template
+                self.resultContours(result.resultContours);
+
                 Blaze.renderWithData(Template.geojsonPreview, {
                     mapData: {
                         geojsonData: result.resultPolygons,
@@ -178,27 +197,12 @@ Template.findContours.viewmodel({
                     mapHeight: self.mapHeight(),
                 }, $('.map-container')[0]);
 
-                let $tbody = $('#results').find('tbody').empty();
-
-                // Append results to table
-                let tableHtml = '';
-                result.resultContours.forEach((contour, index) => {
-                    tableHtml += '<tr>';
-                    tableHtml += `<td>${index+1}</td>`;
-                    tableHtml += `<td>${contour.longitude}</td>`;
-                    tableHtml += `<td>${contour.latitude}</td>`;
-                    tableHtml += `<td>${contour.bestBeam}</td>`;
-                    tableHtml += `<td>${contour.value}</td>`;
-                    tableHtml += '</tr>';
-                });
-                $tbody.append(tableHtml);
+                renderResultTable(self.resultContours(), self.showBestBeamOnly());
             }
 
             $('.loading').text('');
             self.resultShown(true);
         });
-
-
 
         function convertCoordsTableToObject(coords) {
             console.log(coords);
@@ -260,3 +264,25 @@ Template.findContours.viewmodel({
     },
 
 });
+
+function renderResultTable(resultContours, showBestBeamOnly) {
+    // If it's show best beam only mode, group result by locations and show only the one with lowest value (relative contour)
+    // or highest (EIRP, G/T)
+
+    let $tbody = $('#results').find('tbody').empty();
+    let tableHtml = '';
+    let count = 1;
+    resultContours.forEach((contour) => {
+        //console.log('Row: ' + count + ' ' + 'Show best beam only = ' + showBestBeamOnly);
+        if (!showBestBeamOnly || (showBestBeamOnly && contour.isBestBeam)) {
+            tableHtml += '<tr>';
+            tableHtml += `<td>${count++}</td>`;
+            tableHtml += `<td>${contour.longitude}</td>`;
+            tableHtml += `<td>${contour.latitude}</td>`;
+            tableHtml += `<td>${contour.bestBeam}</td>`;
+            tableHtml += `<td>${contour.value}</td>`;
+            tableHtml += '</tr>';
+        }
+    });
+    $tbody.append(tableHtml);
+}
