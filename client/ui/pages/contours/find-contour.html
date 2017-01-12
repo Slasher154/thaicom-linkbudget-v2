@@ -87,7 +87,9 @@
                             <label for="coordinates">Pairs of Lon/Lat to find contours</label>
                             <a href="#" data-toggle="modal" data-target="#howTo">Click to show example input</a>
                             <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
+                            Have location names?, use <a href="http://www.findlatitudeandlongitude.com/batch-geocode">this</a> or <a href="https://www.doogal.co.uk/BatchGeocoding.php">this</a> website to convert them into coordinates.
                         </div>
+
                         <button class="btn btn-primary" {{b "click: coordsSubmitted, visible: selectedSatellite"}}>Submit</button>
 
                     </form>
@@ -159,4 +161,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Geocoder Modal -->
+    <!--
+    <div class="modal fade" id="geocoder" tabindex="-1" role="dialog" aria-labelledby="geocoderModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="geocoderModalLabel">Geocoder</h4>
+                </div>
+                <div class="modal-body">
+                    <h4>Copy your locations into the text areas below</h4>
+                    <textarea class="form-control" rows="5" {{b "value: locationsToGeocode"}}></textarea>
+                    <button class="btn btn-primary" {{b "click: geocode"}}>Convert</button>
+                    <h4>Results</h4>
+                    <textarea class="form-control" id="geocoderResults" rows="5"></textarea>
+                    <p>Press Ctrl+A then Ctrl+C to copy the result</p>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
 </template>
