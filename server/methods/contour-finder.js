@@ -29,6 +29,7 @@ Meteor.methods({
 
         let currentContourName = '';
         let contourNameCount = 1;
+        let beamNames = [];
 
         // Get value type to query from satellite type (HTS = relativeGain, Conventional = either EIRP or G/T)
         let satelliteType = Satellites.findOne({name: options.satellite }).type;
@@ -85,15 +86,11 @@ Meteor.methods({
 
                 // Assign category
                 let categoryNumber = 0;
-                // if beam name is different to the previous one, reset the category count
-                // this means the first, second, third, etc. contour of every beam belongs to the same category
-                if (contour.name !== currentContourName) {
-                    categoryNumber = 1;
-                    contourNameCount = 1;
-                } else {
-                    categoryNumber = ++contourNameCount;
-                }
-                currentContourName = contour.name;
+
+                beamNames.push(contour.name);
+                categoryNumber = _.filter(beamNames,(n) => {
+                    return n == contour.name;
+                }).length - 1;
 
                 //console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
                 let minRange = +contour.value - queryStepDown;
