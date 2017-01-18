@@ -6,5 +6,8 @@
 Meteor.users.helpers({
     fullName() {
         return this.firstName + ' ' + this.lastName;
+    },
+    isAdmin() {
+        return Roles.userIsInRole(this, 'admin');
     }
 });

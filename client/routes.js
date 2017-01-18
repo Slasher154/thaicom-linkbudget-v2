@@ -33,6 +33,18 @@ let loggedIn = FlowRouter.group({
     }]
 });
 
+let admin = loggedIn.group({
+    prefix: '/admin',
+    triggersEnter: [function() {
+        /*
+        if(!Roles.userIsInRole(Meteor.user(), ['admin'])) {
+            console.log('Not admin!!');
+            return FlowRouter.go('index');
+        }
+        */
+    }]
+})
+
 loggedIn.route('/', {
     name: 'index',
     action() {
@@ -115,6 +127,17 @@ loggedIn.route('/faqs', {
         BlazeLayout.render('mainLayout', { content: 'faqs' });
     },
 });
+
+
+// ---------------- Admin Routes ------------------
+
+admin.route('/', {
+    name: 'adminIndex',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'adminIndex' });
+    },
+})
+
 
 loggedIn.route('/video', {
     name: 'video',

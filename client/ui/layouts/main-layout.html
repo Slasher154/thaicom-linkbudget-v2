@@ -68,6 +68,15 @@
                             -->
                         </ul>
                     </li>
+                    {{#if isInRole 'admin'}}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{pathFor 'adminIndex'}}">Admin Configuration</a></li>
+                                <li><a href="{{pathFor 'upload-gxt'}}">Modify contours</a></li>                           
+                            </ul>
+                        </li>
+                    {{/if}}
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="#">Welcome, {{fullName}}</a></li>
