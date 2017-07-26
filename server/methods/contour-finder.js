@@ -43,6 +43,18 @@ Meteor.methods({
         // Loop input contours
         options.contours.forEach((contour) => {
 
+            // If the satellite type is HTS, change the parameter to 'EIRP' for forward beams and 'G/T' for return beams
+            // We enforce this here so the forward beams and return beams can be plotted together regardless of the value of 'Value to Display' (EIRP or G/T)
+            // that user selects
+
+            if (satelliteType.toLowerCase() === 'hts') {
+                if (contour.path === 'forward') {
+                    options.parameter = 'eirp';
+                } else {
+                    options.parameter = 'gt';
+                }
+            }
+
             let searchQuery = {
                 features: {
                     $elemMatch: {

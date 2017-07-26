@@ -6,8 +6,8 @@
   },
   "dependencies": {
     "bcrypt": "^0.8.7",
-    "glob": "^7.1.0",
-    "meteor-node-stubs": "~0.2.0",
+    "glob": "^7.1.2",
+    "meteor-node-stubs": "^0.2.11",
     "q": "^1.4.1",
     "soap": "^0.17.0"
   }
