@@ -35,13 +35,18 @@ Template.geojsonPreview.viewmodel({
             // Add an incoming Geojson Data from the parent template into the map
             thisMap.data.addGeoJson(data.geojsonData);
 
+            // Add incoming Polylines data
+            if (data.polylines) {
+                addPolylines(thisMap, data.polylines);
+            }
+
             // Set style on this map
             setStyle(thisMap);
 
             // Draw marker label on this map (find contour mode = beam name)
             if (self.showLocationLabel()) drawLocationLabel(thisMap);
 
-            // Draw contour line on this map
+            // Draw contour value on this map
             if (self.showContourValue()) {
                 drawContourValue(thisMap, self.contourValueFontSize());
             };
@@ -307,15 +312,23 @@ function setStyle(map) {
     */
     // Color contour lines based on color properties
     map.data.setStyle((feature) => {
+       //console.log('Feature type = ' + feature.getGeometry().getType());
+       let lineSymbol = {
+           path: 'M 0, -1 0, 1',
+           strokeOpacity: 1,
+           scale: 4
+       };
        let geometry = feature.getGeometry();
-        // Only set color on Polygon objects
+        // Only set color on Polygon and Polyline objects
         if(geometry.getType() === 'Polygon') {
             let strokeColor = feature.getProperty('color');
             let strokeWeight = feature.getProperty('strokeWeight');
+            let visible = feature.getProperty('visible');
             return {
                 strokeColor: strokeColor,
                 strokeWeight: strokeWeight,
                 fillOpacity: 0,
+                visible: visible,
                 clickable: false, // to prevent polygon handling mouse event so we still can click the map underneath to get EIRP or G/T value
             };
         } else {
@@ -349,6 +362,64 @@ function recenterMap(map) {
         else {}
     });
     map.fitBounds(bounds);
+}
+
+function addPolylines(map, polylines) {
+    polylines.forEach((line) => {
+
+        console.log('Inconming polyline = ' + JSON.stringify(line));
+
+        // Construct Google Map Path
+        let path = [];
+        line.geometry.coordinates[0].forEach((coords) => {
+            path.push(new google.maps.LatLng(coords[1], coords[0]));
+        });
+
+        var lineSymbol = {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillOpacity: 1,
+            //scale: 2
+        };
+
+        var polylineDotted = new google.maps.Polyline({
+            strokeColor: line.properties.color,
+            stokeWeight: line.properties.strokeWeight,
+            strokeOpacity: 0,
+            fillOpacity: 0,
+            icons: [{
+                icon: lineSymbol,
+                offset: '0',
+                repeat: '10px'
+            }],
+            path: path,
+            map: map
+        })
+
+    });
+    // Test add polyline on map
+   /* var path = [
+        new google.maps.LatLng(39, 4),
+        new google.maps.LatLng(34, 20),
+        new google.maps.LatLng(44, 20),
+        new google.maps.LatLng(39, 4)
+    ];
+    var lineSymbol = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillOpacity: 1,
+        scale: 2
+    };
+    var polylineDotted = new google.maps.Polyline({
+        strokeColor: '#000000',
+        strokeOpacity: 0,
+        fillOpacity: 0,
+        icons: [{
+            icon: lineSymbol,
+            offset: '0',
+            repeat: '10px'
+        }],
+        path: path,
+        map: thisMap
+    });*/
 }
 
 function removeFeatures(map, featuresToRemove) {

@@ -178,6 +178,11 @@
                                 <button class="btn" {{b "click: decreaseStrokeWeight"}}>-</button>
                             </div>
                         </div>
+                        <div class="form-group" {{b "visible: isHts" }}>
+                            <label>Show dashed line on return beams</label>
+                            <button class="btn btn-primary" {{b "click: toggleConvertReturnToDashedLine"}}>{{toggleConvertReturnToDashedLineText}}</button>
+                        </div>
+
                         <div class="form-group">
                             <label>Adjust color</label>
                             <div class="colorPickerContainer">

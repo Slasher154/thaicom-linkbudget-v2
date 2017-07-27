@@ -18,14 +18,14 @@ export const infoWindow = [];
 
 // Source: http://zurb.com/patterntap/pattern/color-palette-flat-ui-colors
 export const mapColors =  [
-        '#1abc9c', // Turquoise
         '#2ecc71', // Emerald
+        '#e67e22', // Carrot
         '#3498db', // Peter River (blue)
+        '#e74c3c', // Alizarin (red)
         '#9b59b6', // Amethyst (violet)
         '#34495e', // Wet Asphalt
         '#f1c40f', // Sunflower
-        '#e67e22', // Carrot
-        '#e74c3c', // Alizarin (red)
+        '#1abc9c', // Turquoise
         '#95a5a6', // Concrete
     ]
 

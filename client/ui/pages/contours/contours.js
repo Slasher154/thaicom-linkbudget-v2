@@ -241,6 +241,7 @@ Template.contours.viewmodel({
                 self.mapData({
                     geojsonData: result.resultContour,
                     beamLabels: result.beamLabels,
+                    polylines: [],
                 });
                 self.applyFormatting();
                 self.renderMap();
@@ -403,6 +404,31 @@ Template.contours.viewmodel({
         this.applyFormatting();
         this.renderMap();
     },
+    // Want to use check box instead of toggle button but checkbox changed event cause the non-stop call to this.applyFormatting() (don't know why)
+    convertReturnToDashedLine: false,
+    toggleConvertReturnToDashedLineText() {
+        if(this.convertReturnToDashedLine()) {
+            return 'Show return as solid line';
+        }
+        return 'Show return as dashed line';
+    },
+    toggleConvertReturnToDashedLine(event) {
+       event.preventDefault();
+       this.convertReturnToDashedLine(!this.convertReturnToDashedLine());
+
+       // Clear the polylines if false
+       if(!this.convertReturnToDashedLine()) {
+           this.mapData().polylines = [];
+       }
+
+       this.applyFormatting();
+       this.renderMap();
+    },
+    // Change the return beams to dashed line
+    convertReturnToDashedLineChanged() {
+        this.applyFormatting();
+        this.renderMap();
+    },
     labelFontSize: 12,
     increaseLabelFontSize(event) {
         event.preventDefault();
@@ -491,12 +517,14 @@ Template.contours.viewmodel({
         let distinctCategories = [];
         let colorChoices = this.contourColors().length == 0 ? this.initialColors() : this.contourColors();
 
+        // Polylines will be created for return beam dashed line
+        let additionalPolylines = [];
+
         this.mapData().geojsonData.features.forEach((feature) => {
             let geometry = feature.geometry;
+
             // Only apply formatting on Polygon objects
             if(geometry.type === 'Polygon') {
-                // Set stroke weight with the current stroke weight value
-                feature.properties.strokeWeight = this.strokeWeight();
 
                 // Assign color based on categories
                 let category = feature.properties.category;
@@ -516,9 +544,35 @@ Template.contours.viewmodel({
                     // Contours in category "A" will get the first color in the mapColors array and all lines in category "B"
                     // will get the 2nd color in the array.
                     feature.properties.color = colorChoices[distinctCategories.indexOf(category) % colorChoices.length].color;
+
                 }
+
+                // Add visibility
+                feature.properties.visible = true;
+
+                // Apply stroke weight
+                feature.properties.strokeWeight = this.strokeWeight();
+
+                // Set stroke weight with the current stroke weight value unless the 'show return beams as dashed line' option is select
+                if(feature.properties.path === 'return' && this.convertReturnToDashedLine()) {
+                    // Add a copy of this feature and convert it to polyline
+                    let newPolyline = Object.assign({}, feature);
+
+                    // Push to map data's polyline array which will be drawn separately from other Geojson data
+                    this.mapData().polylines.push(newPolyline);
+                    console.log(JSON.stringify('new polyline = ' + JSON.stringify(newPolyline)));
+
+                    // Remove stroke weight of this feature (hide it)
+                    feature.properties.visible = false;
+                }
+
+                //console.log(JSON.stringify(feature));
             }
         });
+
+        // Push additional polyline (dashed return beams)
+        additionalPolylines.forEach((p) => this.mapData().geojsonData.features.push(p));
+
         // Reduce the color choices array to make it equal to the number of categories and set it to contourColors array
         // This is to set the contourColors array for the first time when the number of categories are unknown
         this.contourColors(colorChoices.slice(0, distinctCategories.length));
