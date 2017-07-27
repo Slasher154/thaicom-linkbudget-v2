@@ -92,21 +92,35 @@ Meteor.methods({
             // will have only the properties attribute but not features (undefined)
             //let featureCollection = Contours.findOne(searchQuery, projectionQuery);
             let featureCollection = Contours.findOne(searchQuery);
+            console.log(JSON.stringify(searchQuery));
             //console.log(JSON.stringify(featureCollection));
             let contourLogMessage = `Transponder ${contour.name} - ${contour.path} - ${options.parameter} | ${contour.value} dB : `;
             if (featureCollection) {
 
                 // Assign category
-                let categoryNumber = 0;
+                let categoryName = '';
 
-                beamNames.push(contour.name);
-                categoryNumber = _.filter(beamNames,(n) => {
-                    return n == contour.name;
-                }).length - 1;
+                // Use contour text if available
+                if(contour.text) {
+                    console.log('contour.text = ' + contour.text);
+                    categoryName = contour.text;
+                }
+                else {
+                    let categoryNumber = 0;
 
-                //console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
+                    beamNames.push(contour.name);
+                    categoryNumber = _.filter(beamNames,(n) => {
+                            return n == contour.name;
+                        }).length - 1;
+
+                    console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
+                    categoryName = 'Category ' + categoryNumber;
+                }
+
+
                 let minRange = +contour.value - queryStepDown;
                 let maxRange = +contour.value + queryStepUp;
+
 
                 // Loop through each feature to find the contour which matched the contour value
                 // Takes only the first one matched. From the query, it is likely that there is only 1 feature matched.
@@ -114,7 +128,8 @@ Meteor.methods({
                 featureCollection.features.forEach((f, index) => {
                     if (f.properties[queryValue] > minRange && f.properties[queryValue] < maxRange) {
                         console.log('Feature #' + index + ' ' + contour.value);
-                        f.properties.category = 'Category ' + categoryNumber;
+                        f.properties.category = categoryName;
+                        f.properties.text = contour.text;
                         resultContour.features.push(f);
                         console.log(contourLogMessage + `Feature found`);
                     }

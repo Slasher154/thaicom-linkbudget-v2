@@ -43,6 +43,9 @@ Template.geojsonPreview.viewmodel({
             // Set style on this map
             setStyle(thisMap);
 
+            // Show the data from manual input if any
+            // drawUserInputLabel(thisMap);
+
             // Draw marker label on this map (find contour mode = beam name)
             if (self.showLocationLabel()) drawLocationLabel(thisMap);
 
@@ -183,7 +186,39 @@ Template.geojsonPreview.viewmodel({
 
 });
 
+function drawUserInputLabel(map) {
+    // Loop each polygon (contour) to draw the user input label
+    import { TxtOverlay } from '/imports/api/maps/txtOverlay';
+    let userInputLabels = [];
+    map.data.forEach((feature) => {
 
+        let geometry = feature.getGeometry();
+        let fontSize = 14;
+        let offset = 0.05
+        let color = feature.getProperty('color');
+        let text = feature.getProperty('text');
+
+        if(geometry.getType() === 'Polygon' && text) {
+
+                console.log('text = ' + text);
+                geometry.getArray().forEach((path) => {
+
+                    let topmost = _.max(path.getArray(), (latLng) => {
+                        return latLng.lat();
+                    });
+                    console.log('topmost is ' + JSON.stringify(topmost));
+
+                    // offset the label position a bit
+                    let offSetTopmost = new google.maps.LatLng(topmost.lat() + offset, topmost.lng());
+
+                    let customTxt = `<div style="font-size: ${fontSize + 'px'};background-color: ${color}">${text}</div>`;
+                    userInputLabels.push(new TxtOverlay(offSetTopmost, customTxt, "userInputLabel", map));
+
+                });
+        }
+
+    });
+}
 
 function drawLocationLabel(map) {
     /*

@@ -223,17 +223,25 @@
 </template>
 
 <template name="colorPickers">
+    <!--
     <table class="table">
         {{#each c in contourColors}}
             <tr>
-                <td>Color #{{c.index}}</td>
                 <td>
                     <div class="input-group colorpicker-component colorPicker">
-                        <input type="text" value="{{c.color}}" class="form-control" />
-                        <span class="input-group-addon"><i></i></span>
+                        <input type="hidden" value="{{c.color}}" class="form-control" />
+                        <span class="input-group-addon"><i></i>QPSK 1/2</span>
                     </div>
                 </td>
+
             </tr>
         {{/each}}
     </table>
+    -->
+    {{#each c in contourColors}}
+        <div class="input-group colorpicker-component colorPicker">
+            <input type="hidden" value="{{c.color}}"  />
+            <span class="input-group-addon"><i></i>  {{c.category}}</span>
+        </div>
+    {{/each}}
 </template>

@@ -252,11 +252,9 @@ Template.contours.viewmodel({
                         return `<li>${msg}</li>`;
                     })
                     Bert.alert(`<ul>${listMessages.join('')}</ul>`, 'danger', 'fixed-top');
-
+                } else {
                     // Show 'formatting' tab
                     $('a[href="#contour-modifier"]').tab('show');
-
-                } else {
                     self.logMessages([]);
                 }
             }
@@ -314,7 +312,7 @@ Template.contours.viewmodel({
 
                 let columns = row.split('\t');
 
-                if (columns.length < 2 || columns.length > 3) {
+                if (columns.length < 2 || columns.length > 4) {
                     return false;
                 }
                 let contourLine = {};
@@ -323,8 +321,9 @@ Template.contours.viewmodel({
                 if (!columns[0]) return false;
                 contourLine.name = columns[0];
 
+
                 // 2nd column = path (fwd, rtn) for HTS, = value for conventional
-                if (columns.length == 3) { // HTS
+                if (columns.length >= 3) { // HTS
                     let path = columns[1].toLowerCase();
                     if(_.contains(['forward','fwd'], path)) {
                         path = 'forward';
@@ -340,6 +339,11 @@ Template.contours.viewmodel({
                         return false;
                     }
                     contourLine.value = +value;
+                }
+
+                // 4th column = manual text
+                if (columns.length === 4) { // HTS with manual text
+                    contourLine.text = columns[3];
                 }
 
                 // 2nd column = path (fwd, rtn) for HTS, = value for conventional
@@ -377,7 +381,7 @@ Template.contours.viewmodel({
                 ]
             },
     },
-    mapHeight: '700px',
+    mapHeight: '1800px',
     showLabel: true,
     toggleLabelText() {
         if(this.showLabel()){
@@ -487,6 +491,7 @@ Template.contours.viewmodel({
             return {
                 index: index + 1,
                 color, color,
+                category: 'Category ' + index,
             };
         });
     },
@@ -514,6 +519,7 @@ Template.contours.viewmodel({
             label.fontSize = this.labelFontSize();
         });
 
+        // If this is first time rendering the map, set the colorsChoices to initial color
         let distinctCategories = [];
         let colorChoices = this.contourColors().length == 0 ? this.initialColors() : this.contourColors();
 
@@ -533,6 +539,7 @@ Template.contours.viewmodel({
                     // if this category did not appear in the previous contour lines (new one), push it into array
                     if (distinctCategories.indexOf(category) < 0) {
                         distinctCategories.push(category);
+
                     }
 
                     // In some case where the current color array has lesser elements than category, change to initial colors
@@ -576,6 +583,13 @@ Template.contours.viewmodel({
         // Reduce the color choices array to make it equal to the number of categories and set it to contourColors array
         // This is to set the contourColors array for the first time when the number of categories are unknown
         this.contourColors(colorChoices.slice(0, distinctCategories.length));
+
+        // Set the category name in contour colors object to be displayed as legend along with color picker
+        this.contourColors().forEach((c, index) => {
+            c.category = distinctCategories[index];
+        });
+
+
         this.renderPickerColor();
         //console.log(JSON.stringify(this.mapData()));
     },

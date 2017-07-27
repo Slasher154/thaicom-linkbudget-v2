@@ -91,6 +91,7 @@
                 <ul>
                     <li>For KU spot beams contour, you must select 'EIRP' for forward beams and 'G/T' for return beams</li>
                     <li>If you select 'EIRP' here but input return beams, it will result in Ka-band gateway beam (same as G/T with forward)</li>
+                    <li><strong>Update as of 27 July: Select EIRP or G/T here doesn't matter as the program will always return the KU-Band part of the given beams (forward-downlink and return uplink) </strong></li>
                 </ul>
                 <li>Select 'Paste from Excel'</li>
                 <li>Create the table in Excel with each row specifying beam name, path and relative contour value.</li>
@@ -98,6 +99,7 @@
                     <li>1st Column: Beam name - See list below for available beam names. You must use this exact name to query our database. Most beam names are fairly intuitive except 212 where you need to either put 212-13H or 212-3V (both show the same result though), and broadcast beams where it is divided by high and low band</li>
                     <li>2nd Column: Path - This should be either 'forward', 'fwd', 'return' or 'rtn'</li>
                     <li>3rd Column: Relative contour value from beam peak - Must be negative</li>
+                    <li>4th Column (optional) : Text - This can be any text to categorized our contours. If supplied, the contours will be grouped based text in this column. You can specify MCG, capacity or antenna/BUC in this column to group contour lines to use the same color.</li>
                 </ul>
                 <li>Copy the table into the big textbox</li>
                 <li>Click 'Submit'</li>
@@ -116,6 +118,7 @@
                 {{/each}}
             </ul>
             <img class="img-responsive" src="/images/excel-table.PNG" />
+            <img class="img-responsive" src="/images/excel-table-2.PNG" />
             <img class="img-responsive" src="/images/how-to-contours/hts-excel.PNG" />
             <img class="img-responsive" src="/images/how-to-contours/hts-excel-result.PNG" />
 
@@ -137,7 +140,7 @@
                         <ul>
                             <li>For conventional satellite, each selected value of EIRP or G/T will have its own color. The number of color in the initial pool is 9. Therefore, if more than 9 lines need to be drawn, same color will be reused.</li>
                             <li>For HTS with defined contours, 50% will take 1 color, EOC will take another color and EOC-2 will also take another different color. Therefore, only 3 colors maximum will be used in this mode.</li>
-                            <li>For HTS with excel, the number of color used will be equal to the maximum number of given contours in the same beam. The color assigned to each contour line will depend on the order of input. For example, let's say our input is:</li>
+                            <li><strong>For HTS with excel with 3 columns input</strong>, the number of color used will be equal to the maximum number of given contours in the same beam. The color assigned to each contour line will depend on the order of input. For example, let's say our input is:</li>
                             <ul>
                                 <li>203 fwd -2.4</li>
                                 <li>204 fwd -2.6</li>
@@ -158,6 +161,7 @@
                                 <li>Category 2 (color 2): '203 fwd -4.5', '204 fwd -4.7', '207 fwd -5.1' </li>
                             </ul>
                             <li>This concept of assigning color comes from the common pattern of drawing contours on map to show different series on multiple beams (such as different antenna sizes) by CSD team. Same colors will be used across different HTS beams.</li>
+                            <li><strong>For HTS with excel with 4 columns input</strong>, the 4th column will be the category.</li>
                         </ul>
                     </ul>
                 </div>
