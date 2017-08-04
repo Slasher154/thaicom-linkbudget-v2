@@ -93,6 +93,13 @@ loggedIn.route('/contours/upload-gxt', {
     },
 });
 
+loggedIn.route('/satellite/add', {
+    name: 'add-satellite',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'addSatellite' });
+    },
+});
+
 loggedIn.route('/polygon-filler', {
     name: 'polygon-filler',
     action() {

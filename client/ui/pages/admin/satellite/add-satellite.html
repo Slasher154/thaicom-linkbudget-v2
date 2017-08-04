@@ -1,0 +1,77 @@
+<template name="addSatellite">
+    <div class="page-header">
+        <h1>Add / Edit Satellite</h1>
+    </div>
+    <div class="row">
+        <div class="col-sm-9 col-xs-12">
+            <h4>Information of New Satellite</h4>
+            <br>
+            <form id="selector">
+                <div class="form-group">
+                    <label>Select satellite to Edit (if add new just ignore this)</label>
+                    <select class="form-control" {{b "value: satelliteId, change: satelliteChanged"}}>
+                        <option value="">Select satellite to Edit</option>
+                        {{#each sat in uploadedSatellites}}
+                            <option value="{{sat.id}}"> {{ sat.name }}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="satelliteName">Name</label>
+                    <input type="text" id="satelliteName" class="form-control" {{b "value: newSatellite.name"}} />
+                </div>
+                <div class="form-group">
+                    <label for="orbitalSlot">Orbital Slot</label>
+                    <input type="number" step="0.1" id="orbitalSlot" class="form-control" {{b "value: newSatellite.orbitalSlot"}} />
+                </div>
+
+                <div class="form-group">
+                    <label for="stationKeepingBox"></label>
+                    <input type="number" step="0.1" id="stationKeepingBox" class="form-control" {{b "value: newSatellite.stationKeepingBox"}} />
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <select class="form-control" {{b "options: typeOptions, value: newSatellite.type"}}>
+                    </select>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" {{b "check: newSatellite.isThaicom"}}> Thaicom Satellite?
+                    </label>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" {{b "check: newSatellite.isActive"}}> Check if this satellite is still active (not de-orbited yet)
+                    </label>
+                </div>
+
+                <button class="btn btn-danger" {{b "click: deleteSatellite, visible: satelliteId"}}>Delete this satellite</button>
+                <button class="btn btn-primary" {{b "click: satelliteSubmitted"}}>Submit</button>
+
+            </form>
+        </div>
+        <div class="col-sm-3 col-xs-12">
+            <h4>Recently uploaded satellite</h4>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {{#each satellite in uploadedSatellites}}
+                        <tr>
+                            <td>{{ satellite.name }}</td>
+                            <td>{{ satellite.orbitalSlot }}</td>
+                            <td>{{ satellite.created }}</td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>
