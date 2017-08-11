@@ -1792,3 +1792,23 @@ export const sampleGeojsonData = {
     ]
 };
 
+
+// Recieve array of coordinates array and return true if the polygon points are in clockwise order
+// https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order
+export const polygonClockwiseValidator = (polygon) => {
+
+    if (polygon.length === 0) return false;
+
+    let edgeSum = 0;
+
+    for (let i = 0; i < polygon.length; i++) {
+
+        if (i === polygon.length - 1) {
+            edgeSum += (polygon[0][0] - polygon[i][0]) * (polygon[0][1] + polygon[i][1]);
+        } else {
+            edgeSum += (polygon[i+1][0] - polygon[i][0]) * (polygon[i+1][1] + polygon[i][1]);
+        }
+    }
+    return edgeSum >= 0 ? true: false;
+}
+

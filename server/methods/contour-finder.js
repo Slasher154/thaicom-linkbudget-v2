@@ -419,5 +419,9 @@ Meteor.methods({
             beamLabels: beamLabels,
         };
 
+    },
+    'findContourFromId' (id) {
+        check(id, String);
+        return Contours.findOne(id);
     }
 });

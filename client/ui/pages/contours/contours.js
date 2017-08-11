@@ -11,7 +11,8 @@ import { htsTransponderSorter } from '/imports/api/utils/sort-functions';
 
 Template.contours.viewmodel({
     onCreated(){
-        Meteor.subscribe('allThaicomSatellites');
+        // Meteor.subscribe('allThaicomSatellites');
+        Meteor.subscribe('allSatellites');
         Meteor.subscribe('transpondersWithDefinedContours');
         Meteor.subscribe('allContoursWithBasicInfo');
     },
@@ -45,6 +46,9 @@ Template.contours.viewmodel({
             return this.checkSatelliteType(this.selectedSatellite(), 'HTS');
         }
         return false;
+    },
+    isThaicom() {
+        return Satellites.findOne({name: this.selectedSatellite() }).isThaicom;
     },
     checkSatelliteType(name, typeToCheck) {
         return Satellites.findOne({name: name}).type.toLowerCase() === typeToCheck.toLowerCase();
@@ -103,9 +107,15 @@ Template.contours.viewmodel({
           return Transponders.find({
               satellite: this.selectedSatellite()
           }).fetch().map((tp) => {
+              let name = '';
+              if (tp.beam) {
+                  name = `${tp.name} (${tp.beam}`;
+              } else {
+                  name = tp.name;
+              }
               return {
                   id: tp._id,
-                  name: `${tp.name} (${tp.beam})`
+                  name
               };
           });
       }
@@ -126,7 +136,8 @@ Template.contours.viewmodel({
                 'properties.parameter': this.selectedValueToDisplay()
             });
             let values = [];
-            if (contour) {
+            // For Thaicom satellites, we have plenty of EIRP range to select so we generate the selection range here
+            if (contour && this.isThaicom()) {
                 // Generate the array from highest value to lowest value
                 //let step = this.enableMinimumValueStep() ? 0.1 : 0.5;
                 let step = 0.1;
@@ -134,6 +145,13 @@ Template.contours.viewmodel({
                 values = values.map((val) => {
                     return Math.round(val * 10) / 10;
                 });
+            }
+            else if (contour && !this.isThaicom()) {
+                if (contour.properties.availableContours) {
+                    values = contour.properties.availableContours.sort((a, b) => b - a);
+                } else {
+                    Bert.alert(`There is no available contours properties of ${this.selectedValueToDisplay()} of this transponder`, 'danger', 'fixed-top');
+                }
             }
             else {
                 Bert.alert(`Cannot determine the range of ${this.selectedValueToDisplay()} of this transponder to select from`, 'danger', 'fixed-top');

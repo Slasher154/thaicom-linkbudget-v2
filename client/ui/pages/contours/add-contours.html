@@ -1,0 +1,91 @@
+<template name="addContours">
+    <div class="page-header">
+        <h1>Add / Edit Contours of Non-Thaicom Satellite Transponders</h1>
+    </div>
+    <div class="row">
+        <div class="col-sm-3 col-xs-12">
+            <h4>Contour Information</h4>
+            <br>
+            <form id="selector">
+                <div class="form-group">
+                    <label>Select satellite</label>
+                    <select class="form-control" {{b "value: satelliteId"}}>
+                        <option value="">Select satellite to Edit</option>
+                        {{#each sat in uploadedSatellites}}
+                            <option value="{{sat.id}}"> {{ sat.name }}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select transponder</label>
+                    <select class="form-control" {{b "value: transponderId, change: transponderChanged"}}>
+                        <option value="">Select transponder to Edit</option>
+                        {{#each tp in uploadedTransponders}}
+                            <option value="{{tp.id}}"> {{ tp.name }}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <!-- Changing EIRP/G/T will result in the data refresh same as changing transponder -->
+                <div class="form-group">
+                    <label>EIRP or G/T</label>
+                    <select class="form-control" {{b "value: valueToBeStored, change: transponderChanged" }}>
+                        <option value="eirp">EIRP</option>
+                        <option value="gt">G/T</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="peakLatitude">Beam Peak Latitude</label>
+                    <input type="number" step="0.01" id="peakLatitude" class="form-control" {{b "value: peakLatitude"}} />
+                </div>
+
+                <div class="form-group">
+                    <label for="peakLongitude">Beam Peak Longitude</label>
+                    <input type="number" step="0.01" id="peakLongitude" class="form-control" {{b "value: peakLongitude"}} />
+                </div>
+                <p style="color:red">{{loadingText}}</p>
+                <hr>
+                <h4>Add contours</h4>
+                <div class="form-group">
+                    <label for="contourValue">{{valuePlaceholderText}}</label>
+                    <input type="text" id="contourValue" class="form-control" {{b "value: contourValue"}} />
+                </div>
+                <div class="form-group">
+                    <label for="coordinates">Digitized Contours</label>
+                    <textarea class="form-control" id="coordinates" rows="10" {{b "value: coordinates"}}></textarea>
+                </div>
+                <button class="btn btn-success" {{b "click: addContour"}}>Add contour</button>
+                <hr>
+                <h5>Added Contours</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <th>{{valuePlaceholderText}}</th>
+                        <th>Action</th>
+                    </thead>
+                    <tbody>
+                        {{#each contour in contours}}
+                            <tr>
+                                <td class="contourValue">{{contour.value}}</td>
+                                <td><button class="btn btn-danger btn-xs" {{b "click: removeContour"}}>Remove</button></td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <p>Note: You cannot add EIRP and G/T contours within in 1 submission. You need to submit 2 times, 1 for EIRP contours and 1 for G/T contours.</p>
+                <button class="btn btn-primary" {{b "click: contourSubmitted"}}>Submit</button>
+
+            </form>
+        </div>
+
+        <div class="col-sm-9 col-xs-12">
+            <div class="map-container">
+                {{> geojsonPreview mapData=mapData mapHeight=mapHeight}}
+            </div>
+
+        </div>
+    </div>
+    <hr>
+
+</template>

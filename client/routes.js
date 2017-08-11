@@ -100,6 +100,20 @@ loggedIn.route('/satellite/add', {
     },
 });
 
+loggedIn.route('/transponder/add', {
+    name: 'add-transponder',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'addTransponder' });
+    }
+});
+
+loggedIn.route('/contours/add', {
+    name: 'add-contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'addContours' })
+    }
+})
+
 loggedIn.route('/polygon-filler', {
     name: 'polygon-filler',
     action() {

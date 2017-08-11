@@ -9,6 +9,6 @@ Meteor.publish('allThaicomSatellites', function () {
 });
 
 Meteor.publish('allSatellites', function () {
-    return Satellites.find({}, { sort: { name: 1, isThaicom: 1 }});
+    return Satellites.find({}, { sort: { isThaicom: -1, name: 1 }}); // This will put Thaicom satellites first on the list
 });
 

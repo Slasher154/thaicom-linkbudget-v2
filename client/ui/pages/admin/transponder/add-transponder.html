@@ -1,0 +1,66 @@
+<template name="addTransponder">
+    <div class="page-header">
+        <h1>Add / Edit Transponder of Non-Thaicom Satellite </h1>
+    </div>
+    <div class="row">
+        <div class="col-sm-9 col-xs-12">
+            <h4>Information of Transponder</h4>
+            <br>
+            <form id="selector">
+                <div class="form-group">
+                    <label>Select satellite to Edit (if add new just ignore this)</label>
+                    <select class="form-control" {{b "value: satelliteId"}}>
+                        <option value="">Select satellite to Edit</option>
+                        {{#each sat in uploadedSatellites}}
+                            <option value="{{sat.id}}"> {{ sat.name }}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select transponder to Edit(if add new just ignore this)</label>
+                    <select class="form-control" {{b "value: transponderId, change: transponderChanged"}}>
+                        <option value="">Select transponder to Edit</option>
+                        {{#each tp in uploadedTransponders}}
+                            <option value="{{tp.id}}"> {{ tp.name }}</option>
+                        {{/each}}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="satelliteName">Name</label>
+                    <input type="text" id="transponderName" class="form-control" {{b "value: newTransponder.name"}} />
+                </div>
+                <div class="form-group">
+                    <label for="transponderPath">Path (for conventional satellite, path is always forward)</label>
+                    <input type="text" id="transponderPath" class="form-control" {{b "value: newTransponder.path"}} />
+                </div>
+
+                <button class="btn btn-danger" {{b "click: deleteTransponder, visible: transponderId"}}>Delete this transponder</button>
+                <button class="btn btn-primary" {{b "click: transponderSubmitted"}}>Submit</button>
+
+            </form>
+        </div>
+        <div class="col-sm-3 col-xs-12">
+            <h4>Recently uploaded transponder on {{ satelliteName }}</h4>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{#each tp in uploadedTransponders}}
+                    <tr>
+                        <td>{{ tp.name }}</td>
+                        <td>{{ tp.created }}</td>
+                    </tr>
+                {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr>
+
+</template>

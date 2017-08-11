@@ -35,6 +35,8 @@ Template.geojsonPreview.viewmodel({
             // Add an incoming Geojson Data from the parent template into the map
             thisMap.data.addGeoJson(data.geojsonData);
 
+            // console.log(JSON.stringify(data.geojsonData, undefined, 2));
+
             // Add incoming Polylines data
             if (data.polylines) {
                 addPolylines(thisMap, data.polylines);
