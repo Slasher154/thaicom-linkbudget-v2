@@ -121,22 +121,19 @@ Template.addContours.viewmodel({
         // Get the selected table row and transform to jQuery
         let $selectedTableRow = $(event.target.parentElement.parentElement);
 
-        // Get the contour value
-        let contourValue = $selectedTableRow.find('td.contourValue').text();
+        // Get the index of removed item
+        let indexToRemove = $( "tr" ).index($selectedTableRow);
 
-        // console.log(`removing contour with ${this.valueToBeStored()} = ${contourValue}`);
-
-        // Remove the feature with contour value from the feature collections
-        console.log(this.featureCollections());
-        this.featureCollections().features = this.featureCollections().features.filter((c) => {
-            return c.properties[this.valueToBeStored()] !== +contourValue;
-        });
+        // Remove the feature at that index from features in feature collections
+        this.featureCollections().features.splice(indexToRemove, 1);
 
         // Re-render map
         this.renderMap();
 
-        // Remove from table row
-        $selectedTableRow.remove();
+        // Remove from table row by removing that element from contour array
+        // In fact, this should not be split into 2 arrays (contours and featureCollection.features)
+        // But somehow the featureCollection.features cannot be mapped to generate the tables
+        this.contours().splice(indexToRemove, 1);
     },
     contourSubmitted(event) {
         event.preventDefault();
@@ -278,6 +275,9 @@ Template.addContours.viewmodel({
         // The property name of the value will be either 'eirp' or 'gt'. Set that property to the value o finput contour value.
         feature.properties[this.valueToBeStored()] = +this.contourValue();
 
+        // Set text to be displayed in the table
+        feature.properties.text = this.valueToBeStored() === 'eirp' ? `EIRP ${+this.contourValue()} dBW` : `G/T ${+this.contourValue()} dB/K`;
+
         rows.forEach(row => {
             let coordsPair = row.split(',');
             let lng = +coordsPair[0].trim();
@@ -297,6 +297,8 @@ Template.addContours.viewmodel({
 
         // Push the new feature to the geojson data so we can display on the map
         this.featureCollections().features.push(feature);
+
+        console.log(JSON.stringify(this.featureCollections(), undefined, 2));
 
         // Reassign this new FeatureCollection to the Geojson data so the map updates
         this.mapData().geojsonData = this.featureCollections();

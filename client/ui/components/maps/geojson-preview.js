@@ -102,13 +102,13 @@ Template.geojsonPreview.viewmodel({
                                 contentString += '<b>';
                                 contentString += 'Latitude';
                                 contentString += '</b>';
-                                contentString += `: ${contour.latitude} `;
+                                contentString += `: ${contour.latitude.toFixed(3)} `;
                                 contentString += '</div>';
                                 contentString += '<div>';
                                 contentString += '<b>';
                                 contentString += 'Longitude';
                                 contentString += '</b>';
-                                contentString += `: ${contour.longitude} `;
+                                contentString += `: ${contour.longitude.toFixed(3)} `;
                                 contentString += '</div>';
                                 contentString += '<br>';
                                 contentString += '<div>';
@@ -176,6 +176,7 @@ Template.geojsonPreview.viewmodel({
                   lng: 100
               },
               zoom: 4,
+              scrollwheel: true
             };
         }
     },
