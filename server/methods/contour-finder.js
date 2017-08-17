@@ -43,7 +43,7 @@ Meteor.methods({
         // Loop input contours
         options.contours.forEach((contour) => {
 
-            // If the satellite type is HTS, change the parameter to 'EIRP' for forward beams and 'G/T' for return beams
+            // If the satellite type is HTS, change the parameter to 'EIRP' for forward beams and '' for return beams
             // We enforce this here so the forward beams and return beams can be plotted together regardless of the value of 'Value to Display' (EIRP or G/T)
             // that user selects
 
@@ -105,16 +105,21 @@ Meteor.methods({
                     console.log('contour.text = ' + contour.text);
                     categoryName = contour.text;
                 }
+
+                // Otherwise, use satellite + beam/tp name + value by default
                 else {
-                    let categoryNumber = 0;
-
-                    beamNames.push(contour.name);
-                    categoryNumber = _.filter(beamNames,(n) => {
-                            return n == contour.name;
-                        }).length - 1;
-
-                    console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
-                    categoryName = 'Category ' + categoryNumber;
+                    // let categoryNumber = 0;
+                    //
+                    // beamNames.push(contour.name);
+                    // categoryNumber = _.filter(beamNames,(n) => {
+                    //         return n == contour.name;
+                    //     }).length - 1;
+                    //
+                    // console.log('Assign category ' + categoryNumber + ' to beam ' + contour.name);
+                    // categoryName = 'Category ' + categoryNumber;
+                    let valueToShow = options.parameter === 'eirp' ? 'EIRP' : 'G/T';
+                    let unitToShow = options.parameter === 'eirp' ? 'dBW' : 'dB/K';
+                    categoryName = `${options.satellite} - ${contour.name} - ${valueToShow} ${contour.value} ${unitToShow}`;
                 }
 
 
@@ -129,6 +134,7 @@ Meteor.methods({
                     if (f.properties[queryValue] > minRange && f.properties[queryValue] < maxRange) {
                         console.log('Feature #' + index + ' ' + contour.value);
                         f.properties.category = categoryName;
+                        f.properties.visible = true;
                         f.properties.text = contour.text;
                         resultContour.features.push(f);
                         console.log(contourLogMessage + `Feature found`);

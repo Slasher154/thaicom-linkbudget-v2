@@ -72,6 +72,13 @@ loggedIn.route('/contours', {
     },
 });
 
+loggedIn.route('/contours-v2', {
+    name: 'contours',
+    action() {
+        BlazeLayout.render('mainLayout', { content: 'contoursV2' });
+    },
+});
+
 loggedIn.route('/find-contours', {
     name: 'find-contours',
     action() {
