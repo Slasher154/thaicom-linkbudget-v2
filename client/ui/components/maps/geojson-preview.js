@@ -283,7 +283,7 @@ function drawContourValue(map, fontSize) {
     let contourValueLabels = [];
     map.data.forEach((feature) => {
         let geometry = feature.getGeometry();
-        if(geometry.getType() === 'Polygon') {
+        if(geometry.getType() === 'Polygon' && feature.getProperty('visible')) {
             let contourValue = 0;
             let possibleAttributes = ['relativeGain', 'eirp', 'gt'];
             // If strokeweight = 0, hide the contour value by default (such as when the page just reloaded the dummy contour
